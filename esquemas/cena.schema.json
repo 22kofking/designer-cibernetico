@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://designer-cibernetico/esquemas/cena.schema.json",
+  "title": "Documento de cena",
+  "description": "Formato único lido por agentes, editor e exportador. Caixas em frações da peça.",
+  "type": "object",
+  "required": ["versao", "formato", "nos"],
+  "properties": {
+    "versao": { "const": "0.1" },
+    "nome": { "type": "string" },
+    "descricao": { "type": "string" },
+    "formato": {
+      "type": "object",
+      "required": ["largura", "altura"],
+      "properties": {
+        "largura": { "type": "integer", "minimum": 1 },
+        "altura": { "type": "integer", "minimum": 1 },
+        "fundo": { "$ref": "#/definitions/cor" }
+      }
+    },
+    "fontes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["familia", "arquivo"],
+        "properties": {
+          "familia": { "type": "string" },
+          "peso": { "type": "integer" },
+          "arquivo": { "type": "string" }
+        }
+      }
+    },
+    "nos": { "type": "array", "items": { "$ref": "#/definitions/no" } }
+  },
+  "definitions": {
+    "cor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "caixa": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" }, "y": { "type": "number" },
+        "w": { "type": "number", "exclusiveMinimum": 0 }, "h": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "origem": {
+      "description": "De onde o material veio: criados, referencias ou publicos (com a licença). O banco de referências usa este campo.",
+      "type": "object",
+      "properties": {
+        "fonte": { "enum": ["criados", "referencias", "publicos"] },
+        "como": { "type": "string" },
+        "licenca": { "type": "string" },
+        "url": { "type": "string" }
+      }
+    },
+    "no": {
+      "type": "object",
+      "required": ["id", "tipo"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "tipo": { "enum": ["imagem", "gradiente", "retangulo", "bloco_texto", "grupo"] },
+        "papel": { "enum": ["fundo", "texto", "mascote", "elemento", "logo", "efeito"] },
+        "caixa": { "$ref": "#/definitions/caixa" },
+        "encaixe": { "enum": ["conter", "cobrir", "esticar"] },
+        "ancora": { "enum": ["centro", "base", "topo", "esquerda", "direita"] },
+        "rotacao": { "type": "number" },
+        "opacidade": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visivel": { "type": "boolean" },
+        "bloqueado": { "type": "boolean" },
+        "espelhar": { "type": "boolean" },
+        "origem": { "$ref": "#/definitions/origem" },
+        "asset": { "type": "string" },
+        "direcao": { "enum": ["horizontal", "vertical"] },
+        "paradas": {
+          "type": "array",
+          "items": { "type": "array", "minItems": 2, "maxItems": 3 }
+        },
+        "cor": { "$ref": "#/definitions/cor" },
+        "fonte": {
+          "type": "object", "required": ["familia"],
+          "properties": { "familia": { "type": "string" }, "peso": { "type": "integer" } }
+        },
+        "caixa_alta": { "type": "boolean" },
+        "vao": { "type": "number", "minimum": 0 },
+        "espacamento": { "type": "number" },
+        "alinhamento": { "enum": ["esquerda", "centro", "direita"] },
+        "vertical": { "enum": ["inicio", "centro", "fim"] },
+        "tamanho_max": { "type": ["number", "null"] },
+        "linhas": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["texto"],
+            "properties": { "texto": { "type": "string" }, "estilo": { "type": "string" }, "peso": { "type": "number", "exclusiveMinimum": 0 } }
+          }
+        },
+        "estilos": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": { "cor": { "$ref": "#/definitions/cor" }, "rampa": { "type": "array" } }
+          }
+        },
+        "sombra": { "type": "object" },
+        "flex": {
+          "type": "object",
+          "properties": {
+            "direcao": { "enum": ["linha", "coluna"] },
+            "justificar": { "enum": ["inicio", "centro", "fim", "entre", "em_volta"] },
+            "alinhar": { "enum": ["inicio", "centro", "fim"] },
+            "espaco": { "type": "number" },
+            "quebrar": { "type": "boolean" }
+          }
+        },
+        "filhos": { "type": "array", "items": { "$ref": "#/definitions/no" } },
+        "crescer": { "type": "number" }
+      }
+    }
+  }
+}

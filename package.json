@@ -1,0 +1,26 @@
+{
+  "name": "designer-cibernetico",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test testes/*.test.js",
+    "editor": "node ferramentas/servidor.js",
+    "render": "node src/node/cli.js render",
+    "validar": "node src/node/cli.js validar"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "fabric": "^7.4.0",
+    "jsdom": "^29.1.1",
+    "sharp": "^0.35.5",
+    "yoga-layout": "^3.2.1"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

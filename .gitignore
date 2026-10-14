@@ -1,0 +1,4 @@
+node_modules/
+saida/
+*.tmp.*
+.DS_Store

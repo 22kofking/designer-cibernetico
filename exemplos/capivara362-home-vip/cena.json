@@ -1,0 +1,45 @@
+{
+  "versao": "0.1",
+  "nome": "capivara362-home-vip",
+  "descricao": "Banner home VIP da CAPIVARA362 no padrão 9pmbet (ficha capivara362 v1.0), mascote estilo A.",
+  "formato": { "largura": 2040, "altura": 600, "fundo": "#050203" },
+  "fontes": [
+    { "familia": "Montserrat", "peso": 900, "arquivo": "../../assets/fontes/Montserrat-Black.ttf" }
+  ],
+  "nos": [
+    { "id": "cena", "papel": "fundo", "tipo": "imagem", "asset": "assets/cena.png",
+      "caixa": { "x": 0, "y": 0, "w": 1, "h": 1 }, "encaixe": "cobrir", "bloqueado": true,
+      "origem": { "fonte": "criados", "como": "gateway z-image-turbo", "licenca": "nossa" } },
+    { "id": "escurecimento", "papel": "fundo", "tipo": "gradiente", "direcao": "horizontal",
+      "caixa": { "x": 0, "y": 0, "w": 1, "h": 1 }, "bloqueado": true,
+      "paradas": [[0, "#050203", 0.97], [0.22, "#050203", 0.97], [0.3, "#050203", 0.62], [0.42, "#050203", 0.12], [0.55, "#050203", 0]] },
+    { "id": "entorno", "papel": "elemento", "tipo": "imagem", "asset": "assets/entorno.png",
+      "caixa": { "x": 0.42, "y": 0, "w": 0.58, "h": 1 },
+      "origem": { "fonte": "criados", "como": "gateway z-image-turbo", "licenca": "nossa" } },
+    { "id": "mascote", "papel": "mascote", "tipo": "imagem", "asset": "assets/mascote-farao.png",
+      "caixa": { "x": 0.42, "y": 0, "w": 0.525, "h": 1 }, "ancora": "base",
+      "origem": { "fonte": "criados", "como": "gateway z-image-turbo, estilo A, figurino faraó", "licenca": "nossa" } },
+    { "id": "frente", "papel": "elemento", "tipo": "imagem", "asset": "assets/frente-moedas.png",
+      "caixa": { "x": 0.37, "y": 0.703, "w": 0.63, "h": 0.297 }, "ancora": "base",
+      "origem": { "fonte": "criados", "como": "gateway z-image-turbo", "licenca": "nossa" } },
+    { "id": "brilho", "papel": "efeito", "tipo": "imagem", "asset": "assets/brilho.png",
+      "caixa": { "x": 0, "y": 0, "w": 1, "h": 1 }, "encaixe": "esticar", "bloqueado": true },
+    { "id": "texto", "papel": "texto", "tipo": "bloco_texto",
+      "caixa": { "x": 0.074, "y": 0.3, "w": 0.32, "h": 0.53 },
+      "fonte": { "familia": "Montserrat", "peso": 900 },
+      "caixa_alta": true, "vao": 0.28, "alinhamento": "esquerda", "vertical": "centro",
+      "linhas": [
+        { "texto": "Área de", "estilo": "branco", "peso": 1 },
+        { "texto": "Membro", "estilo": "branco", "peso": 1 },
+        { "texto": "VIP", "estilo": "amarelo", "peso": 4 }
+      ],
+      "estilos": {
+        "branco": { "rampa": [[0, "#fffefc"], [1, "#f7f5f0"]] },
+        "amarelo": { "rampa": [[0, "#fef80c"], [1, "#fde804"]] }
+      },
+      "sombra": { "cor": "#000000", "opacidade": 0.35, "desvio": [0, 0.03], "desfoque": 0.04 } },
+    { "id": "logo", "papel": "logo", "tipo": "imagem", "asset": "assets/logo-capivara362.png",
+      "caixa": { "x": 0.041, "y": 0.113, "w": 0.137, "h": 0.154 }, "ancora": "esquerda",
+      "origem": { "fonte": "criados", "licenca": "nossa" } }
+  ]
+}
