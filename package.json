@@ -12,7 +12,8 @@
     "oficina": "node src/node/oficina-cli.js",
     "desconstruir": "node src/node/desconstruir-cli.js",
     "mascote": "node src/node/mascote-cli.js",
-    "peca": "node src/node/peca-cli.js"
+    "peca": "node src/node/peca-cli.js",
+    "procedural": "node src/node/procedural-cli.js"
   },
   "keywords": [],
   "author": "",

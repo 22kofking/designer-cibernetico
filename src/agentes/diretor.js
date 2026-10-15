@@ -9,6 +9,7 @@ import { grafoParaCena } from '../desconstrucao/molde.js';
 import { planejar } from '../desconstrucao/plano.js';
 import { PAPEL_DO_TIPO } from '../desconstrucao/grafo.js';
 import { FORMATOS_VETORIAIS } from '../oficinas/elementos.js';
+import { geradorParaParte } from '../oficinas/procedural.js';
 
 export async function lerMarca(arquivo) {
   const marca = JSON.parse(await readFile(arquivo, 'utf8'));
@@ -40,6 +41,11 @@ function opcoesDaParte(banco, no, p, marca, tema, { vectorcraft }) {
     // Vetor pode ir para a oficina: cores tiradas da parte da referência (só o estilo).
     if (papel === 'elemento' && vectorcraft && FORMATOS_VETORIAIS.includes(c.formato)) itens.push({ tipo: 'adaptar', fonte: c.fonte, id: c.id, titulo: `${c.titulo}, nas cores da referência (VectorCraft)` });
   }
+  // Elemento geométrico (moedas, medalhão, envelopes, raio, faíscas): também sai
+  // desenhado por código, nas cores da parte. Entra logo depois do melhor item do
+  // banco: se o reuso for reprovado, a segunda tentativa já é a procedural.
+  const gerador = papel === 'elemento' && geradorParaParte(no);
+  if (gerador) itens.splice(Math.min(1, itens.length), 0, { tipo: 'procedural', gerador, titulo: `${gerador.replaceAll('_', ' ')} desenhado por código (procedural)` });
   if (papel === 'fundo') return [...itens, { tipo: 'gradiente', titulo: 'gradiente com a paleta medida' }];
   if (papel === 'mascote') {
     const montagem = marca.montagens?.[tema];

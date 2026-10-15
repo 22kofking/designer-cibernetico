@@ -8,7 +8,8 @@ A estrutura completa (banco de referências, oficinas por parte, suíte ArtCraft
 referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** (oficina de elementos, ver
 [docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
 [docs/desconstrucao.md](docs/desconstrucao.md)), **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)) e **6**
-(equipe de agentes: diretor, especialistas, crítico e bibliotecário, ver [docs/agentes.md](docs/agentes.md)).
+(equipe de agentes: diretor, especialistas, crítico e bibliotecário, ver [docs/agentes.md](docs/agentes.md)). Elementos
+geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md).
 
 ## O que já funciona
 

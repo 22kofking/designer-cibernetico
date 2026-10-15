@@ -16,7 +16,7 @@ Para usar a oficina do VectorCraft (recolorir vetores), defina `VECTORCRAFT_CLI`
 | --- | --- | --- |
 | Diretor de arte | `src/agentes/diretor.js` | Lê o grafo e a marca, consulta o banco parte por parte (plano da fase 4), monta o molde e dá a cada especialista a sua parte com as opções em ordem de preferência. |
 | Cenarista | `src/agentes/especialistas.js` | Fundo do banco ou gradiente com a paleta medida. |
-| Ilustrador de elementos | `src/agentes/especialistas.js` | Material do banco. Um vetor também pode ir para o VectorCraft, recolorido com as cores da parte na referência. |
+| Ilustrador de elementos | `src/agentes/especialistas.js` | Material do banco. Um vetor também pode ir para o VectorCraft, recolorido com as cores da parte na referência. Elemento geométrico (moedas, medalhão, envelopes, raio, faíscas) também pode sair desenhado por código, ver [procedural.md](procedural.md). |
 | Ilustrador do mascote | `src/agentes/especialistas.js` | Mascote em partes da marca para o tema (a montagem já traz o objeto na mão). Mascotes de outro tema ficam só como rascunho. |
 | Tipógrafo | `src/agentes/especialistas.js` | Escreve os textos da marca no layout medido (linhas, pesos, vão). |
 | Crítico | `src/agentes/critico.js` | Renderiza como o editor e mede cada parte contra a referência, conferindo também as regras da ficha. |
@@ -74,8 +74,10 @@ Cada peça vai para `/mnt/project-files/pecas/<marca>/<peça>/` com estes arquiv
 
 ## Primeiras 3 peças (CAPIVARA362)
 
-| Peça | ΔE da peça | O que falta |
-| --- | --- | --- |
-| home Telegram | 8,6 | As moedas medem 11,1. Os ícones foram de 34 para 4,7 com o avião recolorido no VectorCraft. |
-| home envelopes | 7,8 | Falta a pose do mascote no figurino "sorte" com o envelope (gateway). O envelope vermelho mede 16,4 pela régua de cor. |
-| promo VIP | 7,2 | O medalhão e as moedas medem 10,9 e 10,7. O mascote faraó em partes passou. |
+Com os elementos desenhados por código (procedural) entrando como segunda opção:
+
+| Peça | ΔE da peça | Crítico | O que mudou / falta |
+| --- | --- | --- | --- |
+| home Telegram | 8,6 | aprovou | Moedas de 11,1 para 7,0 (chuva de moedas procedural). Ícones em 4,7 com o avião recolorido no VectorCraft. |
+| home envelopes | 6,0 | reprovou | Envelopes de 16,4 para 6,2 (envelopes com moedas furadas, procedural). Falta a pose do mascote no figurino do tema (gateway). |
+| promo VIP | 6,7 | aprovou | Medalhão de 10,9 para 4,0 e moedas de 10,7 para 6,8 (procedural). |

@@ -1,12 +1,13 @@
 // Especialistas: cada um só mexe nos nós da sua parte. Recebem a tarefa do
 // diretor e o número da opção a usar (0 = a preferida) e trocam o material
 // daquela parte na cena. O resto da cena fica como está.
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gradienteDaPaleta, trazerAsset } from '../desconstrucao/molde.js';
 import { acharReferencia, recortarNoDoGrafo } from '../desconstrucao/grafo.js';
 import { pastaDoItem } from '../banco/armazem.js';
 import { adaptarVetor } from '../oficinas/elementos.js';
+import { gerarProcedural } from '../oficinas/procedural.js';
 import { coresPrincipaisDe } from '../qualidade/cor.js';
 import { lerMontagem, mascoteNaCena } from '../mascote/montagem.js';
 
@@ -60,7 +61,30 @@ async function adaptarNaOficina(item, tarefa, ctx) {
   return { asset, paleta };
 }
 
+// Procedural: o gerador desenha a parte inteira no tamanho da caixa, nas cores
+// tiradas da parte da referência (só a paleta; a forma é toda nossa).
+async function desenharPorCodigo(cena, tarefa, opcao, ctx) {
+  const noGrafo = ctx.grafo.nos.find((n) => n.id === tarefa.no);
+  let paleta = null;
+  if (noGrafo?.mascara || Array.isArray(noGrafo?.caixa)) {
+    const recorte = await recortarNoDoGrafo(ctx.grafo, noGrafo, acharReferencia(ctx.grafo, ctx.referencias ?? []));
+    paleta = await coresPrincipaisDe(recorte, 4);
+  }
+  const { largura: W, altura: H } = cena.formato;
+  const largura = Math.max(16, Math.round(tarefa.caixa[2] * W)), altura = Math.max(16, Math.round(tarefa.caixa[3] * H));
+  const semente = opcao.semente ?? 1;
+  const r = await gerarProcedural(opcao.gerador, { largura, altura, semente, paleta });
+  const base = `assets/${tarefa.no}-procedural-${opcao.gerador}-${semente}`;
+  await mkdir(path.join(ctx.pasta, 'assets'), { recursive: true });
+  await writeFile(path.join(ctx.pasta, `${base}.svg`), r.svg);
+  await writeFile(path.join(ctx.pasta, `${base}.png`), r.png);
+  const como = `ilustrador de elementos: ${opcao.gerador.replaceAll('_', ' ')} desenhado por código (semente ${semente}${paleta ? `, cores da parte ${paleta.join(' ')}` : ''}); vetor em ${base}.svg`;
+  substituir(cena, tarefa.no, [{ id: tarefa.no, papel: 'elemento', tipo: 'imagem', asset: `${base}.png`, caixa: caixaDe(tarefa.caixa), encaixe: 'conter', origem: { fonte: 'criados', como, licenca: 'nossa' } }]);
+  return { paleta, svg: `${base}.svg` };
+}
+
 async function ilustradorElementos(cena, tarefa, opcao, ctx) {
+  if (opcao.tipo === 'procedural') return desenharPorCodigo(cena, tarefa, opcao, ctx);
   const item = itemDoBanco(ctx.banco, opcao);
   let asset, como = `ilustrador de elementos: ${item.titulo}`, info = {};
   if (opcao.tipo === 'adaptar') {
