@@ -8,6 +8,7 @@
     "editor": "node ferramentas/servidor.js",
     "render": "node src/node/cli.js render",
     "validar": "node src/node/cli.js validar",
+    "psd": "node src/node/cli.js psd",
     "banco": "node src/node/banco-cli.js",
     "oficina": "node src/node/oficina-cli.js",
     "desconstruir": "node src/node/desconstruir-cli.js",
@@ -21,6 +22,7 @@
   "type": "module",
   "dependencies": {
     "@huggingface/transformers": "^4.3.1",
+    "ag-psd": "^31.0.3",
     "canvas": "^3.2.3",
     "fabric": "^7.4.0",
     "jsdom": "^29.1.1",

@@ -9,7 +9,8 @@ referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** 
 [docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
 [docs/desconstrucao.md](docs/desconstrucao.md)), **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)) e **6**
 (equipe de agentes: diretor, especialistas, crítico e bibliotecário, ver [docs/agentes.md](docs/agentes.md)). Elementos
-geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md).
+geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md). Fundo, mascote e objeto
+podem nascer separados pelo gateway e toda peça sai também em PSD com camadas, ver [docs/componentes.md](docs/componentes.md).
 
 ## O que já funciona
 
