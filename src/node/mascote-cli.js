@@ -4,7 +4,9 @@
 //   partes <receita.json> [--nao-guardar]            separa o mascote em camadas (corpo + partes) e guarda no banco
 //   conferir <imagem.png>                            parece o personagem? saiu infantil?
 //   prompt --tema telegram [--figurino mago] [--segura "..."]   prompt travado de uma pose
-//   pose --tema telegram --teto 0.02 [--quantas 2]   gera pose pelo gateway, confere e guarda as aprovadas
+//   pose --tema telegram --teto 0.02 [--quantas 2] [--fundo ia]
+//                                                    gera pose pelo gateway, confere e guarda as aprovadas
+//   fundo <imagem.png> [--saida recorte.png]         tira o fundo com o BiRefNet (personagem inteiro)
 //   trocar <cena.json> --no mascote --montagem montagem.json [--parte orbe --por desenho.png]
 //                                                    põe o mascote em camadas na cena (grava cena-mascote.json)
 //
@@ -15,10 +17,11 @@ import { Banco } from '../banco/armazem.js';
 import { importarArquivo, slug } from '../banco/importar.js';
 import { celula, montarPrancha } from '../banco/prancha.js';
 import { lerMontagem, mascoteNaCena, montar, raizDosMascotes } from '../mascote/montagem.js';
+import { tirarFundoIA } from '../mascote/fundo.js';
 import { conferirPersonagem, gerarPose, lerPersonagem, promptDaPose } from '../mascote/personagem.js';
 import { carregarCena } from './render-node.js';
 
-const COM_VALOR = ['--personagem', '--tema', '--figurino', '--segura', '--teto', '--quantas', '--no', '--montagem', '--parte', '--por', '--saida', '--semente'];
+const COM_VALOR = ['--personagem', '--tema', '--figurino', '--segura', '--teto', '--quantas', '--no', '--montagem', '--parte', '--por', '--saida', '--semente', '--fundo'];
 function opcao(args, nome, padrao) {
   const i = args.indexOf(`--${nome}`);
   return i >= 0 ? args[i + 1] : padrao;
@@ -41,9 +44,18 @@ async function principal(args) {
     const receita = JSON.parse(await readFile(arquivo, 'utf8'));
     const { montagem, pasta } = await montar(banco, personagem, receita, { guardar: !resto.includes('--nao-guardar') });
     const celulas = [];
-    for (const c of montagem.camadas) celulas.push(await celula(path.join(pasta, c.arquivo), [`${c.id} (${c.papel})`, c.nota_separador != null ? `separador ${c.nota_separador}` : c.remendado ? 'com remendo' : '', c.banco ?? 'não guardado'], c.papel !== 'corpo'));
+    const legenda = (c) => c.qa ? `QA ${c.qa.aprovado ? 'ok' : 'reprovou'} · separador ${c.nota_separador}` : c.remendado ? `com remendo (nitidez ${c.nitidez_remendo})` : '';
+    for (const c of montagem.camadas) celulas.push(await celula(path.join(pasta, c.arquivo), [`${c.id} (${c.papel})`, legenda(c), c.banco ?? 'não guardado'], c.papel !== 'corpo'));
     await montarPrancha(celulas, path.join(pasta, 'prancha.png'));
-    console.log(JSON.stringify({ pasta, camadas: montagem.camadas.map(({ id, papel, caixa, banco: b }) => ({ id, papel, caixa, banco: b })) }, null, 2));
+    console.log(JSON.stringify({ pasta, camadas: montagem.camadas.map(({ id, papel, caixa, banco: b, qa, nitidez_remendo }) => ({ id, papel, caixa, banco: b, qa, nitidez_remendo })) }, null, 2));
+    return;
+  }
+
+  if (comando === 'fundo') {
+    const [arquivo] = posicionais(resto);
+    const destino = path.resolve(opcao(resto, 'saida', arquivo.replace(/\.\w+$/, '-sem-fundo.png')));
+    await writeFile(destino, await tirarFundoIA(await readFile(arquivo)));
+    console.log(JSON.stringify({ arquivo: destino }, null, 2));
     return;
   }
 
@@ -57,7 +69,7 @@ async function principal(args) {
     const tema = opcao(resto, 'tema');
     const r = await gerarPose(banco, personagem, {
       tema, figurino: opcao(resto, 'figurino'), segura: opcao(resto, 'segura'),
-      quantas: Number(opcao(resto, 'quantas', 2)), teto: Number(opcao(resto, 'teto', 0)), semente: opcao(resto, 'semente') && Number(opcao(resto, 'semente')),
+      quantas: Number(opcao(resto, 'quantas', 2)), teto: Number(opcao(resto, 'teto', 0)), semente: opcao(resto, 'semente') && Number(opcao(resto, 'semente')), fundo: opcao(resto, 'fundo', 'cor'),
     });
     const pasta = path.resolve(opcao(resto, 'saida', path.join(raizDosMascotes(), personagem.nome, 'poses')));
     await mkdir(pasta, { recursive: true });
@@ -113,7 +125,7 @@ async function principal(args) {
     return;
   }
 
-  console.error((await readFile(new URL(import.meta.url), 'utf8')).split('\n').slice(1, 13).join('\n'));
+  console.error((await readFile(new URL(import.meta.url), 'utf8')).split('\n').slice(1, 14).join('\n'));
   process.exitCode = 2;
 }
 

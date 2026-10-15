@@ -33,6 +33,9 @@ export async function montar(banco, personagem, receita, { pasta = path.join(rai
     const camada = { id: parte.id, papel: parte.papel, z: parte.z, caixa: parte.caixa, arquivo: nome };
     if (parte.nota != null) camada.nota_separador = parte.nota;
     if (parte.remendado) camada.remendado = true;
+    if (parte.nitidez_remendo != null) camada.nitidez_remendo = parte.nitidez_remendo;
+    if (parte.alerta) camada.alerta = parte.alerta;
+    if (parte.qa) camada.qa = { aprovado: parte.qa.aprovado, problemas: parte.qa.problemas, alerta: parte.qa.alerta, escolha: parte.qa.escolha, medidas: parte.qa.medidas };
     if (guardar) {
       const salvo = await importarArquivo(banco, path.join(pasta, nome), {
         id: slug(`${personagem.nome}-${receita.nome}-${parte.id}`),
@@ -41,7 +44,7 @@ export async function montar(banco, personagem, receita, { pasta = path.join(rai
         tags: ['mascote', 'parte', parte.papel, receita.figurino, receita.tema, personagem.nome].filter(Boolean),
         papel: 'mascote',
         licenca: item.licenca,
-        origem: { como: 'mascote em partes (SlimSAM + remendo)', base: receita.fonte, montagem: receita.nome, parte: parte.id },
+        origem: { como: 'mascote em partes (SAM + QA do recorte + remendo)', base: receita.fonte, montagem: receita.nome, parte: parte.id },
       });
       camada.banco = `criados/${salvo.id}`;
     }

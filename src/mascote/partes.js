@@ -3,6 +3,10 @@
 // o corpo leva um remendo onde a parte estava, para a troca não deixar buraco.
 import sharp from 'sharp';
 import { segmentar } from './segmentar.js';
+import { LIMIARES_RECORTE, conferirRecorte, escolherMascara, nitidezDoRemendo } from '../qualidade/recorte.js';
+
+// Papéis que são pedaço do próprio bicho (as cores do corpo aparecem nelas de verdade).
+const PARTES_DO_CORPO = new Set(['cabeca', 'braco', 'mao', 'perna', 'rabo', 'corpo']);
 
 // Preenche os pixels marcados com a média dos vizinhos já conhecidos, de fora
 // para dentro (cor e transparência). Buraco no meio do corpo vira roupa; o que
@@ -165,9 +169,16 @@ export async function separarEmPartes(png, partes, { remendo = true, folga = 6, 
   const uniao = Buffer.alloc(w * h);
   const saida = [];
   for (const parte of partes) {
-    const { mascara: bruta, nota } = await segmentador(png, parte);
-    let mascara = limparMascara(bruta, w, h);
+    const seg = await segmentador(png, parte);
+    const objeto = parte.objeto ?? !PARTES_DO_CORPO.has(parte.papel);
+    // Com as opções do modelo, o QA escolhe (a nota mais alta pode ter pego a mão junto).
+    const opcoes = (seg.opcoes ?? [{ mascara: seg.mascara, nota: seg.nota }]).map((o) => ({ ...o, mascara: limparMascara(o.mascara, w, h) }));
+    const escolha = escolherMascara(data, w, h, opcoes, { objeto });
+    let mascara = escolha.mascara;
+    const nota = escolha.nota;
     if (parte.halo !== 0) mascara = haloDaParte(data, w, h, mascara, parte.halo ?? 30);
+    const qa = conferirRecorte(data, w, h, mascara, { opcoes, objeto });
+    if (escolha.trocou) qa.escolha = `opção ${escolha.indice + 1} de ${opcoes.length} (a de nota mais alta não passou no QA)`;
     const rgba = Buffer.from(data);
     for (let i = 0; i < w * h; i++) {
       const dentro = mascara[i] && data[i * 4 + 3] > 0;
@@ -176,16 +187,18 @@ export async function separarEmPartes(png, partes, { remendo = true, folga = 6, 
     }
     const caixa = caixaDaMascara(rgba.filter((_, k) => k % 4 === 3), w, h);
     if (!caixa) throw new Error(`a parte "${parte.id}" saiu vazia: confira os pontos`);
-    saida.push({ id: parte.id, papel: parte.papel ?? 'objeto_na_mao', z: parte.z ?? 2, nota: +nota.toFixed(3), caixa: fracoes(caixa, w, h), png: await recortarRgba(rgba, w, h, caixa) });
+    saida.push({ id: parte.id, papel: parte.papel ?? 'objeto_na_mao', z: parte.z ?? 2, nota: +nota.toFixed(3), qa, caixa: fracoes(caixa, w, h), png: await recortarRgba(rgba, w, h, caixa) });
   }
   const corpo = Buffer.from(data);
   const buraco = dilatar(uniao, w, h, folga);
   for (let i = 0; i < w * h; i++) if (buraco[i]) corpo[i * 4 + 3] = 0;
   if (remendo) remendar(corpo, w, h, buraco);
+  // Só conta o que ficou corpo (o remendo também devolve pixels ao transparente).
+  const nitidez = remendo ? +nitidezDoRemendo(corpo, w, h, buraco).toFixed(3) : null;
   const caixaCorpo = caixaDaMascara(corpo.filter((_, k) => k % 4 === 3), w, h);
   return {
     tamanho: [w, h],
-    corpo: { id: 'corpo', papel: 'corpo', z: 1, caixa: fracoes(caixaCorpo, w, h), png: await recortarRgba(corpo, w, h, caixaCorpo), remendado: remendo },
+    corpo: { id: 'corpo', papel: 'corpo', z: 1, caixa: fracoes(caixaCorpo, w, h), png: await recortarRgba(corpo, w, h, caixaCorpo), remendado: remendo, nitidez_remendo: nitidez, ...(nitidez != null && nitidez < LIMIARES_RECORTE.nitidez_min ? { alerta: `remendo borrado (nitidez ${nitidez})` } : {}) },
     partes: saida,
   };
 }

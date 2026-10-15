@@ -17,7 +17,8 @@ function carregar() {
 }
 
 // png: imagem (buffer); pontos/excluir: [[x, y], ...] em pixels da imagem.
-// Devolve a máscara (1 byte por pixel, 0 ou 255) com a melhor nota do modelo.
+// Devolve a máscara (1 byte por pixel, 0 ou 255) com a melhor nota do modelo
+// e todas as opções ({ mascara, nota }).
 export async function segmentar(png, { pontos, excluir = [] }) {
   if (!pontos?.length) throw new Error('segmentar precisa de pelo menos um ponto em cima da parte');
   const { modelo, processador } = await carregar();
@@ -31,9 +32,14 @@ export async function segmentar(png, { pontos, excluir = [] }) {
   const [mascaras] = await processador.post_process_masks(saida.pred_masks, entradas.original_sizes, entradas.reshaped_input_sizes);
   const notas = Array.from(saida.iou_scores.data);
   const [, n, h, w] = mascaras.dims;
-  let melhor = 0;
-  for (let i = 1; i < n; i++) if (notas[i] > notas[melhor]) melhor = i;
-  const mascara = Buffer.alloc(w * h);
-  for (let i = 0; i < w * h; i++) mascara[i] = mascaras.data[melhor * w * h + i] ? 255 : 0;
-  return { mascara, largura: w, altura: h, nota: notas[melhor] };
+  // As 3 opções do modelo vão junto: a melhor nota nem sempre é a parte certa
+  // (no mago, a nota mais alta era o orbe com a mão); quem escolhe é o QA.
+  const opcoes = [];
+  for (let k = 0; k < n; k++) {
+    const mascara = Buffer.alloc(w * h);
+    for (let i = 0; i < w * h; i++) mascara[i] = mascaras.data[k * w * h + i] ? 255 : 0;
+    opcoes.push({ mascara, nota: notas[k] });
+  }
+  const melhor = opcoes.reduce((a, b) => (b.nota > a.nota ? b : a));
+  return { mascara: melhor.mascara, largura: w, altura: h, nota: melhor.nota, opcoes };
 }

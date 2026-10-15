@@ -7,6 +7,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { gerarImagem } from '../oficinas/gateway.js';
 import { removerFundo } from '../oficinas/elementos.js';
+import { tirarFundoIA } from './fundo.js';
 import { cosseno, embeddingDeImagem, embeddingDeTexto } from '../banco/visual.js';
 
 export async function lerPersonagem(arquivo) {
@@ -76,12 +77,14 @@ export async function conferirPersonagem(banco, personagem, png) {
 
 // Pose nova pelo gateway (só com teto): gera, tira o fundo e confere. Devolve
 // todas as tentativas com a conferência; quem guarda no banco é quem chamou.
-export async function gerarPose(banco, personagem, { tema, figurino, segura, quantas = 2, teto, semente } = {}) {
+// fundo: 'cor' (fundo liso pela cor da borda, rápido) ou 'ia' (BiRefNet, para
+// quando o fundo vem cheio; ~20 s e ~7,5 GB de memória por imagem).
+export async function gerarPose(banco, personagem, { tema, figurino, segura, quantas = 2, teto, semente, fundo = 'cor' } = {}) {
   const { prompt, figurino: nomeFigurino } = promptDaPose(personagem, { tema, figurino, segura });
   const g = await gerarImagem({ descricao: prompt, prompt, quantas, teto, semente, tamanho: '768x1024' });
   const tentativas = [];
   for (const img of g.imagens) {
-    const png = await removerFundo(img.png);
+    const png = fundo === 'ia' ? await tirarFundoIA(img.png) : await removerFundo(img.png);
     tentativas.push({ png, job: img.job, semente: img.semente, conferencia: await conferirPersonagem(banco, personagem, png) });
   }
   return { prompt, figurino: nomeFigurino, gasto: g.gasto, tentativas };
