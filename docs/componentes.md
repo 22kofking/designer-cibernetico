@@ -65,7 +65,12 @@ camadas difere da prévia em menos de 1 nível, numa escala de 0 a 255.
 
 Para referências e imagens antigas, o plano completo está em `/mnt/project-files/estrutura/plano-camadas.md`.
 
-O LayerD (CyberAgent, ICCV 2025, código e pesos Apache 2.0) roda em CPU (cerca de 1 min por banner). Ele separa bem o
-que é gráfico chapado: tira texto e logo e completa o que estava atrás deles. A ilustração (personagem, fogo, objetos)
-continua no fundo. Para separar a ilustração, as opções são o Qwen-Image-Layered (GPU grande) ou gerar por
-componentes desde o início.
+O LayerD (CyberAgent, ICCV 2025, código e pesos Apache 2.0) foi testado em CPU nas 13 referências da 9pmbet, de 40 a
+125 s cada, e não serviu.
+
+- O texto saiu limpo só em 1 de 13.
+- Nas outras, ele tira o texto pequeno e o logo, mas deixa a manchete grande no fundo.
+- A ilustração (personagem, fogo, objetos) nunca se separa.
+
+Ele foi feito para peças chapadas, não para banners ilustrados. Para separar a ilustração, sobram duas opções: o
+Qwen-Image-Layered, que precisa de GPU grande, ou gerar por componentes desde o início, que é o que este módulo faz.
