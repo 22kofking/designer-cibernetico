@@ -7,7 +7,7 @@ A estrutura completa (banco de referências, oficinas por parte, suíte ArtCraft
 [docs/estrutura.md](docs/estrutura.md). Fases prontas: **1** (documento de cena, canvas e oficina de texto), **2** (banco de
 referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** (oficina de elementos, ver
 [docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
-[docs/desconstrucao.md](docs/desconstrucao.md)).
+[docs/desconstrucao.md](docs/desconstrucao.md)) e **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)).
 
 ## O que já funciona
 
@@ -20,6 +20,7 @@ referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** 
 | Banco de referências | `src/banco/`, [docs/banco.md](docs/banco.md) | criados, referências e públicos com licença; busca por imagem, texto ou nó da cena (CLIP + silhueta); prancha de resultados |
 | Oficina de elementos | `src/oficinas/`, [docs/oficinas.md](docs/oficinas.md) | reusa o que já temos, adapta um vetor parecido no VectorCraft (paleta e contorno da ficha) ou gera matéria-prima pelo gateway com teto e vetoriza; guarda o resultado no banco e troca o nó na cena |
 | Desconstrução → banco → molde | `src/desconstrucao/`, [docs/desconstrucao.md](docs/desconstrucao.md) | lê o grafo de uma referência, guarda cada parte no banco, consulta o banco parte por parte e monta um molde de cena com o layout dela e o nosso material |
+| Mascote | `src/mascote/`, `personagens/`, [docs/mascote.md](docs/mascote.md) | ficha do personagem (prompt, figurinos, temas, folha), conferência "parece o personagem e não é infantil", separação em partes por pontos (SlimSAM em CPU) com remendo, troca de parte na cena |
 | Mesa de Cena | `editor/` | editor no navegador: camadas, arrastar, escalar, girar, editar o texto, salvar a cena e exportar PNG |
 
 ## Como usar
@@ -34,6 +35,7 @@ npm run banco -- buscar --texto "gold coin" --prancha moedas.png
 npm run oficina -- elemento --nome moedas --texto "stack of gold coins" \
   --paleta "#f0b03a,#e5682d,#aa251c,#fef60a" --contorno "#120804:8"   # precisa do vectorcraft-cli (VECTORCRAFT_CLI)
 npm run desconstruir -- molde grafos/promo-vip.json --logo nosso-logo.png
+npm run mascote -- partes personagens/capivara362-a/montagens/mago.json
 ```
 
 O exemplo `exemplos/capivara362-home-vip/` é o banner home VIP da CAPIVARA362 (padrão 9pmbet, mascote estilo A),

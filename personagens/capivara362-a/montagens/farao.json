@@ -1,0 +1,55 @@
+{
+  "nome": "farao",
+  "figurino": "farao",
+  "tema": "vip",
+  "fonte": "criados/9pmbet-camadas-home-vip-gateway-03-mascote",
+  "partes": [
+    {
+      "id": "cabeca",
+      "papel": "cabeca",
+      "descricao": "cabeça com o toucado de faraó e os óculos (o separador pegou o toucado e o rosto juntos)",
+      "pontos": [
+        [
+          41,
+          204
+        ],
+        [
+          235,
+          31
+        ],
+        [
+          310,
+          170
+        ],
+        [
+          306,
+          290
+        ],
+        [
+          60,
+          120
+        ],
+        [
+          90,
+          290
+        ]
+      ],
+      "excluir": [
+        [
+          204,
+          204
+        ],
+        [
+          204,
+          120
+        ],
+        [
+          250,
+          330
+        ]
+      ],
+      "halo": 0,
+      "z": 2
+    }
+  ]
+}

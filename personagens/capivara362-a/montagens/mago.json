@@ -1,0 +1,34 @@
+{
+  "nome": "mago",
+  "figurino": "mago",
+  "tema": "telegram",
+  "fonte": "criados/9pmbet-camadas-promo-telegram-gateway-03-mascote",
+  "partes": [
+    {
+      "id": "orbe",
+      "papel": "objeto_na_mao",
+      "descricao": "orbe azul com o avião do Telegram na mão esquerda",
+      "pontos": [
+        [
+          60,
+          250
+        ],
+        [
+          175,
+          240
+        ],
+        [
+          120,
+          205
+        ]
+      ],
+      "excluir": [
+        [
+          110,
+          340
+        ]
+      ],
+      "z": 2
+    }
+  ]
+}

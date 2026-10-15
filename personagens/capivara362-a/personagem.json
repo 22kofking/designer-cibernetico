@@ -1,0 +1,70 @@
+{
+  "nome": "capivara362-a",
+  "marca": "CAPIVARA362",
+  "descricao": "Capivara padrão A (escolhido por Nicolas em 14/10/2026): quadrinho 2D com contorno preto grosso, óculos escuros, sorriso aberto mostrando os dentes e dedo apontando para quem vê. Adulta, descontraída e chamativa; nunca infantil.",
+  "prompt": "Vibrant 2D cartoon illustration in bold comic style, thick black outlines, rich saturated colors, dramatic golden rim lighting, stylish adult cartoon casino mascot, not cute, not for kids, not chibi. Waist-up portrait cropped at the waist of a charismatic anthropomorphic capybara man with an athletic human body and broad shoulders, long blunt capybara muzzle, leaning towards the viewer, huge hyped open-mouth grin showing teeth, eyebrows raised, dark sunglasses pushed slightly down the nose, pointing at the viewer as if saying come play, {figurino}, {segura}, centered, isolated on a plain light grey studio background, no text, no letters",
+  "figurino_padrao": "sorte",
+  "figurinos": {
+    "sorte": "wearing a red Chinese silk tang jacket with gold frog buttons and a red cap with a gold rim",
+    "mago": "wearing a flowing red and gold sorcerer robe with a high collar, crackling blue lightning around the hands",
+    "farao": "wearing a golden pharaoh headdress with blue stripes, a wide gold collar with turquoise gems and gold armor bracers",
+    "rua": "wearing a red baseball cap backwards, a green varsity jacket with white sleeves and a thick gold chain",
+    "pirata": "wearing a brown pirate tricorn hat and a red captain coat with gold trim"
+  },
+  "temas": {
+    "resgate": {
+      "figurino": "sorte",
+      "segura": "holding a red lucky pouch with gold details in one hand and a red envelope in the other"
+    },
+    "convite": {
+      "figurino": "rua",
+      "segura": "holding up a smartphone showing a colorful slot game screen"
+    },
+    "telegram": {
+      "figurino": "mago",
+      "segura": "holding out a big glowing blue crystal orb with a white paper plane symbol inside, crackling with lightning"
+    },
+    "envelopes": {
+      "figurino": "sorte",
+      "segura": "one paw stretched towards the camera and the other arm raised holding a red envelope"
+    },
+    "vip": {
+      "figurino": "farao",
+      "segura": "raising a fist with a gold armor bracer"
+    },
+    "rebate": {
+      "figurino": "rua",
+      "segura": "holding a red money bag with a gold dollar sign in one hand and a fan of green banknotes in the other"
+    },
+    "apostas": {
+      "figurino": "sorte",
+      "segura": "arms open, presenting the slot machines around"
+    },
+    "login": {
+      "figurino": "farao",
+      "segura": "holding a shiny gold bar in each hand"
+    },
+    "redes": {
+      "figurino": "pirata",
+      "segura": "holding a smartphone showing a red video play icon"
+    }
+  },
+  "folha": [
+    {
+      "figurino": "farao",
+      "banco": "criados/9pmbet-camadas-home-vip-gateway-03-mascote",
+      "arquivo": "/mnt/project-files/gera-imagem/9pmbet/camadas/home-vip-gateway/03-mascote.png"
+    },
+    {
+      "figurino": "mago",
+      "banco": "criados/9pmbet-camadas-promo-telegram-gateway-03-mascote",
+      "arquivo": "/mnt/project-files/gera-imagem/9pmbet/camadas/promo-telegram-gateway/03-mascote.png"
+    }
+  ],
+  "conferencia": {
+    "parecido_min": 0.8,
+    "infantil_alerta": 0.6,
+    "infantil_max": 0.8,
+    "nota": "infantil = chance pelo CLIP de ser 'fofo para crianças' contra 'mascote adulto'. Calibrado em 15/10/2026: padrão A 0,17 a 0,52; 3D adulto 0,49 a 0,72; versão infantil reprovada 0,87 a 0,95."
+  }
+}
