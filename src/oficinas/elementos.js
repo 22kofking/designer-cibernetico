@@ -43,7 +43,9 @@ export function decidir(resultados, { tipo = 'imagem', limiares, gerarPermitido 
     return { acao: ehVetor(r.item) ? 'adaptar' : 'reusar', base: r, motivo: 'escolhido à mão' };
   }
   const nosso = resultados.find((r) => r.item.fonte === 'criados');
-  if (nosso && nosso.nota >= corte.reusar) {
+  const melhorNota = resultados.find((r) => usavel(r.item))?.nota ?? 0;
+  // Reusar só quando o nosso está no topo (um vetor bem mais parecido ganha dele).
+  if (nosso && nosso.nota >= corte.reusar && nosso.nota >= melhorNota - 0.02) {
     return { acao: 'reusar', base: nosso, motivo: `já temos um quase igual (nota ${nosso.nota.toFixed(3)} ≥ ${corte.reusar})` };
   }
   const vetor = resultados.find((r) => usavel(r.item) && ehVetor(r.item));

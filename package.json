@@ -9,7 +9,8 @@
     "render": "node src/node/cli.js render",
     "validar": "node src/node/cli.js validar",
     "banco": "node src/node/banco-cli.js",
-    "oficina": "node src/node/oficina-cli.js"
+    "oficina": "node src/node/oficina-cli.js",
+    "desconstruir": "node src/node/desconstruir-cli.js"
   },
   "keywords": [],
   "author": "",
