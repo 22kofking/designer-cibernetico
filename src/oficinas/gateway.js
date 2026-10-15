@@ -21,7 +21,7 @@ function urlDaImagem(job) {
   return typeof img === 'string' ? img : img?.url;
 }
 
-export async function gerarImagem({ descricao, modelo = 'rapido', tamanho = '1024x1024', semente, quantas = 1, teto }) {
+export async function gerarImagem({ descricao, prompt, modelo = 'rapido', tamanho = '1024x1024', semente, quantas = 1, teto }) {
   const cfg = configDoGateway();
   if (!cfg) throw new Error('gerar precisa de GATEWAY_URL e GATEWAY_CHAVE no ambiente');
   if (!(teto > 0)) throw new Error('gerar precisa de um teto de gasto (--teto em US$)');
@@ -31,7 +31,7 @@ export async function gerarImagem({ descricao, modelo = 'rapido', tamanho = '102
   const saida = [];
   let gasto = 0;
   for (let i = 0; i < quantas; i++) {
-    const corpo = { prompt: promptDeElemento(descricao), model: modelo, size: tamanho, wait: true };
+    const corpo = { prompt: prompt ?? promptDeElemento(descricao), model: modelo, size: tamanho, wait: true };
     if (semente != null) corpo.seed = semente + i;
     let r = await fetch(`${cfg.url}/v1/images`, { method: 'POST', headers: cabecalho, body: JSON.stringify(corpo) });
     if (!r.ok) throw new Error(`gateway respondeu ${r.status}: ${(await r.text()).slice(0, 200)}`);

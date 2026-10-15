@@ -10,7 +10,8 @@
     "validar": "node src/node/cli.js validar",
     "banco": "node src/node/banco-cli.js",
     "oficina": "node src/node/oficina-cli.js",
-    "desconstruir": "node src/node/desconstruir-cli.js"
+    "desconstruir": "node src/node/desconstruir-cli.js",
+    "mascote": "node src/node/mascote-cli.js"
   },
   "keywords": [],
   "author": "",

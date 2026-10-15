@@ -13,7 +13,11 @@ function linear(c) {
 }
 
 export function hexParaLab(hex) {
-  const [r, g, b] = hexParaRgb(hex).map(linear);
+  return rgbParaLab(...hexParaRgb(hex));
+}
+
+export function rgbParaLab(r8, g8, b8) {
+  const [r, g, b] = [r8, g8, b8].map(linear);
   const x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047;
   const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   const z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
