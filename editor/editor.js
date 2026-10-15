@@ -145,13 +145,36 @@ function selecionarPorId(id, doPainel) {
   });
 }
 
+// Ordem de desenho: a última camada da cena fica por cima, como no Photoshop.
+function mudarOrdem(no, passo) {
+  const i = cena.nos.indexOf(no);
+  const j = Math.min(Math.max(i + passo, 0), cena.nos.length - 1);
+  if (i === j) return;
+  cena.nos.splice(i, 1);
+  cena.nos.splice(j, 0, no);
+  redesenhar();
+}
+
+function botoesDeOrdem(no) {
+  return `<div class="ordem">
+    <button id="frente" type="button">Trazer para frente</button>
+    <button id="tras" type="button">Enviar para trás</button>
+  </div>`;
+}
+
+function ligarBotoesDeOrdem(no) {
+  $('#frente').onclick = () => mudarOrdem(no, 1);
+  $('#tras').onclick = () => mudarOrdem(no, -1);
+}
+
 function mostrarPropriedades() {
   const painel = $('#propriedades');
   const no = selecionado && acharNo(selecionado);
   if (!no) { painel.innerHTML = '<p class="dica">Clique numa camada ou no canvas.</p>'; return; }
   const origem = no.origem ? `<p class="dica">Origem: ${no.origem.fonte ?? ''} ${no.origem.como ? '· ' + no.origem.como : ''} · licença ${no.origem.licenca ?? '?'}</p>` : '';
   if (no.tipo !== 'bloco_texto') {
-    painel.innerHTML = `<h3>${no.id}</h3>${origem}<p class="dica">Arraste, escale ou gire no canvas.</p>`;
+    painel.innerHTML = `<h3>${no.id}</h3>${origem}<p class="dica">Arraste, escale ou gire no canvas.</p>${botoesDeOrdem(no)}`;
+    ligarBotoesDeOrdem(no);
     return;
   }
   const estilos = Object.keys(no.estilos ?? {});
@@ -159,7 +182,9 @@ function mostrarPropriedades() {
     <div id="linhas"></div>
     <button id="mais">+ linha</button>
     <label>Alinhamento <select id="alinhamento">${['esquerda', 'centro', 'direita'].map((a) => `<option ${no.alinhamento === a ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
-    <label>Vão entre linhas <input id="vao" type="number" step="0.02" min="0" value="${no.vao ?? 0.28}"></label>`;
+    <label>Vão entre linhas <input id="vao" type="number" step="0.02" min="0" value="${no.vao ?? 0.28}"></label>
+    ${botoesDeOrdem(no)}`;
+    ligarBotoesDeOrdem(no);
   const div = $('#linhas');
   no.linhas.forEach((l, i) => {
     const linha = document.createElement('div');
