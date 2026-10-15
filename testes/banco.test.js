@@ -62,6 +62,15 @@ test('a busca ordena pela nota e respeita o filtro de fonte', () => {
   assert.ok(Math.abs(r[0].nota - 1) < 1e-6);
 });
 
+test('a busca mostra uma vez só itens repetidos', () => {
+  const b = new Banco('/nao-usado');
+  b.colocar({ id: 'a', fonte: 'publicos', licenca: 'CC0' }, vetor(DIM_VISUAL, 5), vetor(DIM_FORMA, 5));
+  b.colocar({ id: 'a-copia', fonte: 'publicos', licenca: 'CC0' }, vetor(DIM_VISUAL, 5), vetor(DIM_FORMA, 5));
+  b.colocar({ id: 'outro', fonte: 'publicos', licenca: 'CC0' }, vetor(DIM_VISUAL, 6), vetor(DIM_FORMA, 6));
+  const r = buscar(b, { visual: vetor(DIM_VISUAL, 5) }, { k: 3 });
+  assert.deepEqual(r.map((x) => x.item.id), ['a', 'outro']);
+});
+
 test('slug tira acento, extensão e símbolos', () => {
   assert.equal(slug('Ícones/Avião de Papel.PNG'), 'icones-aviao-de-papel');
 });
