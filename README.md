@@ -5,8 +5,9 @@ ferramenta certa, montar e conferir**. Tudo que é criado vira material reutiliz
 
 A estrutura completa (banco de referências, oficinas por parte, suíte ArtCraft, agentes) está em
 [docs/estrutura.md](docs/estrutura.md). Fases prontas: **1** (documento de cena, canvas e oficina de texto), **2** (banco de
-referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) e **3** (oficina de elementos, ver
-[docs/oficinas.md](docs/oficinas.md)).
+referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** (oficina de elementos, ver
+[docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
+[docs/desconstrucao.md](docs/desconstrucao.md)).
 
 ## O que já funciona
 
@@ -18,6 +19,7 @@ referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) e **3*
 | Renderizador sem tela | `src/node/` | o agente vê e mede exatamente o que o editor mostra; exporta PNG e WebP |
 | Banco de referências | `src/banco/`, [docs/banco.md](docs/banco.md) | criados, referências e públicos com licença; busca por imagem, texto ou nó da cena (CLIP + silhueta); prancha de resultados |
 | Oficina de elementos | `src/oficinas/`, [docs/oficinas.md](docs/oficinas.md) | reusa o que já temos, adapta um vetor parecido no VectorCraft (paleta e contorno da ficha) ou gera matéria-prima pelo gateway com teto e vetoriza; guarda o resultado no banco e troca o nó na cena |
+| Desconstrução → banco → molde | `src/desconstrucao/`, [docs/desconstrucao.md](docs/desconstrucao.md) | lê o grafo de uma referência, guarda cada parte no banco, consulta o banco parte por parte e monta um molde de cena com o layout dela e o nosso material |
 | Mesa de Cena | `editor/` | editor no navegador: camadas, arrastar, escalar, girar, editar o texto, salvar a cena e exportar PNG |
 
 ## Como usar
@@ -31,6 +33,7 @@ npm run editor                                         # abre em http://localhos
 npm run banco -- buscar --texto "gold coin" --prancha moedas.png
 npm run oficina -- elemento --nome moedas --texto "stack of gold coins" \
   --paleta "#f0b03a,#e5682d,#aa251c,#fef60a" --contorno "#120804:8"   # precisa do vectorcraft-cli (VECTORCRAFT_CLI)
+npm run desconstruir -- molde grafos/promo-vip.json --logo nosso-logo.png
 ```
 
 O exemplo `exemplos/capivara362-home-vip/` é o banner home VIP da CAPIVARA362 (padrão 9pmbet, mascote estilo A),
