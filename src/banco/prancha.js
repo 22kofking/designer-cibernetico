@@ -15,7 +15,7 @@ function corta(t, n) {
   return t.length > n ? `${t.slice(0, n - 1)}…` : t;
 }
 
-async function celula(png, linhas, destaque) {
+export async function celula(png, linhas, destaque) {
   const fundo = destaque ? '#3a2c12' : '#26231e';
   const img = await sharp(png).resize(LADO - 16, LADO - 16, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
   const texto = `<svg width="${LADO}" height="${LEGENDA}" xmlns="http://www.w3.org/2000/svg">
@@ -37,6 +37,10 @@ export async function prancha(banco, consultaPng, tituloConsulta, resultados, de
     const mini = path.join(pastaDoItem(banco.raiz, r.item), r.item.arquivos.miniatura);
     celulas.push(await celula(mini, [r.item.titulo, `${r.item.fonte} · ${r.item.licenca}`, `nota ${r.nota.toFixed(3)} · forma ${r.forma.toFixed(2)}`]));
   }
+  return montarPrancha(celulas, destino);
+}
+
+export async function montarPrancha(celulas, destino) {
   const colunas = Math.min(5, celulas.length);
   const linhas = Math.ceil(celulas.length / colunas);
   const G = 8;
