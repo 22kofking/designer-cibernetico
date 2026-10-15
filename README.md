@@ -7,7 +7,9 @@ A estrutura completa (banco de referências, oficinas por parte, suíte ArtCraft
 [docs/estrutura.md](docs/estrutura.md). Fases prontas: **1** (documento de cena, canvas e oficina de texto), **2** (banco de
 referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** (oficina de elementos, ver
 [docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
-[docs/desconstrucao.md](docs/desconstrucao.md)) e **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)).
+[docs/desconstrucao.md](docs/desconstrucao.md)), **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)) e **6**
+(equipe de agentes: diretor, especialistas, crítico e bibliotecário, ver [docs/agentes.md](docs/agentes.md)). Elementos
+geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md).
 
 ## O que já funciona
 
@@ -21,6 +23,7 @@ referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** 
 | Oficina de elementos | `src/oficinas/`, [docs/oficinas.md](docs/oficinas.md) | reusa o que já temos, adapta um vetor parecido no VectorCraft (paleta e contorno da ficha) ou gera matéria-prima pelo gateway com teto e vetoriza; guarda o resultado no banco e troca o nó na cena |
 | Desconstrução → banco → molde | `src/desconstrucao/`, [docs/desconstrucao.md](docs/desconstrucao.md) | lê o grafo de uma referência, guarda cada parte no banco, consulta o banco parte por parte e monta um molde de cena com o layout dela e o nosso material |
 | Mascote | `src/mascote/`, `personagens/`, [docs/mascote.md](docs/mascote.md) | ficha do personagem (prompt, figurinos, temas, folha), conferência "parece o personagem e não é infantil", separação em partes por pontos (SlimSAM em CPU) com QA do recorte e remendo, fundo tirado com BiRefNet, troca de parte na cena |
+| Agentes | `src/agentes/`, `marcas/`, [docs/agentes.md](docs/agentes.md) | diretor reparte as partes com opções, especialistas trocam só a sua parte, crítico mede cada parte contra a referência (ΔE2000 < 10 e regras da ficha) e devolve só a que errou, bibliotecário guarda a peça aprovada |
 | Mesa de Cena | `editor/` | editor no navegador: camadas, arrastar, escalar, girar, editar o texto, salvar a cena e exportar PNG |
 
 ## Como usar
@@ -36,6 +39,7 @@ npm run oficina -- elemento --nome moedas --texto "stack of gold coins" \
   --paleta "#f0b03a,#e5682d,#aa251c,#fef60a" --contorno "#120804:8"   # precisa do vectorcraft-cli (VECTORCRAFT_CLI)
 npm run desconstruir -- molde grafos/promo-vip.json --logo nosso-logo.png
 npm run mascote -- partes personagens/capivara362-a/montagens/mago.json
+npm run peca -- produzir /caminho/grafos/home-telegram.json   # equipe de agentes: peça da marca no layout da referência
 ```
 
 O exemplo `exemplos/capivara362-home-vip/` é o banner home VIP da CAPIVARA362 (padrão 9pmbet, mascote estilo A),

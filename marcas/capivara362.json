@@ -1,0 +1,36 @@
+{
+  "nome": "capivara362",
+  "descricao": "CAPIVARA362 no padrão 9pmbet (ficha-v1.0): fundo de fogo, preto à esquerda, texto em caixa alta branco e amarelo-limão, mascote estilo A à direita.",
+  "logo": "../exemplos/capivara362-home-vip/assets/logo-capivara362.png",
+  "personagem": "../personagens/capivara362-a/personagem.json",
+  "montagens": {
+    "telegram": "/mnt/project-files/mascotes/capivara362-a/mago/montagem.json",
+    "vip": "/mnt/project-files/mascotes/capivara362-a/farao/montagem.json"
+  },
+  "textos": {
+    "telegram": [
+      { "texto": "Siga o", "estilo": "branco", "peso": 1 },
+      { "texto": "Telegram", "estilo": "dourado", "peso": 1.05 },
+      { "texto": "e fique", "estilo": "branco", "peso": 1 },
+      { "texto": "por dentro", "estilo": "dourado", "peso": 1.05 }
+    ],
+    "envelopes": [
+      { "texto": "Chuva de", "estilo": "dourado", "peso": 1.2 },
+      { "texto": "envelopes", "estilo": "dourado", "peso": 1.2 },
+      { "texto": "todos os dias", "estilo": "branco", "peso": 0.9 }
+    ],
+    "vip": [
+      { "texto": "Área de", "estilo": "branco", "peso": 1 },
+      { "texto": "Membro", "estilo": "branco", "peso": 1 },
+      { "texto": "VIP", "estilo": "dourado", "peso": 2.4 }
+    ]
+  },
+  "critico": {
+    "delta_max": 10,
+    "L_mediana": [45, 150],
+    "esquerda_mais_escura_que_centro": true,
+    "ouro_presente_min": 0.01,
+    "letra_min_da_referencia": 0.7,
+    "fonte_das_regras": "ficha-v1.0.yaml (qa) e loop de medição do gera-o-de-imagem-"
+  }
+}
