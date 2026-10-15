@@ -76,3 +76,21 @@ test('PSD: uma camada por nó, pedaços da mesma parte num grupo', async () => {
   assert.ok(Math.abs(psd.children[2].children[1].opacity - 0.5) < 0.01);
   assert.equal(psd.children[2].children[0].left, 60);
 });
+
+test('mão erguida: a mancha estreita no alto, longe do eixo do corpo', async () => {
+  const { maoErguida, caixaNaMao } = await import('../src/geracao/componentes.js');
+  // Corpo no meio, cabeça em cima do corpo e um braço erguido à direita.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300">
+    <rect x="50" y="120" width="100" height="180" fill="#c33"/>
+    <circle cx="95" cy="70" r="45" fill="#a76"/>
+    <rect x="160" y="40" width="22" height="120" fill="#a76"/></svg>`;
+  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+  const mao = await maoErguida(png);
+  assert.equal(mao.lado, 'direita');
+  assert.ok(Math.abs(mao.x - 171 / 200) < 0.02, `x ${mao.x}`);
+  assert.ok(mao.y > 40 / 300 && mao.y < 120 / 300, `y ${mao.y}`);
+  const c = caixaNaMao(mao, { x: 0, y: 0, w: 200, h: 300 }, { largura: 400, altura: 300 }, 0.7);
+  assert.ok(Math.abs(c.x + c.w / 2 - mao.x * 200 / 400) < 0.01, 'objeto centrado na mão');
+  const semBraco = await sharp(Buffer.from(svg.replace(/<rect x="160"[^>]*\/>/, ''))).png().toBuffer();
+  assert.equal(await maoErguida(semBraco), null);
+});

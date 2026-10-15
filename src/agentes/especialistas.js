@@ -10,7 +10,10 @@ import { adaptarVetor } from '../oficinas/elementos.js';
 import { gerarProcedural } from '../oficinas/procedural.js';
 import { coresPrincipaisDe } from '../qualidade/cor.js';
 import { lerMontagem, mascoteNaCena } from '../mascote/montagem.js';
-import { gerarComponente } from '../geracao/componentes.js';
+import { caixaNaMao, gerarComponente, maoErguida } from '../geracao/componentes.js';
+import { readFile } from 'node:fs/promises';
+import sharp from 'sharp';
+import { caixaEmPixels, encaixar } from '../nucleo/cena.js';
 
 const caixaDe = (c) => ({ x: +c[0].toFixed(4), y: +c[1].toFixed(4), w: +c[2].toFixed(4), h: +c[3].toFixed(4) });
 
@@ -106,11 +109,36 @@ async function desenharPorCodigo(cena, tarefa, opcao, ctx) {
   return { paleta, svg: `${base}.svg` };
 }
 
+// Mascote gerado na cena (com a mão livre) e a caixa do objeto na mão erguida dele.
+async function objetoNaMao(cena, assetObjeto, ctx) {
+  const mascote = cena.nos.find((n) => n.papel === 'mascote' && n.tipo === 'imagem' && /componente/.test(n.asset));
+  if (!mascote) return null;
+  const pngMascote = await readFile(path.join(ctx.pasta, mascote.asset));
+  const mao = await maoErguida(pngMascote);
+  if (!mao) return null;
+  const m = await sharp(pngMascote).metadata();
+  const o = await sharp(path.join(ctx.pasta, assetObjeto)).metadata();
+  const pos = encaixar(m.width, m.height, caixaEmPixels(mascote.caixa, cena.formato), mascote.encaixe ?? 'conter', mascote.ancora ?? 'centro');
+  const caixa = caixaNaMao(mao, { x: pos.x, y: pos.y, w: m.width * pos.escalaX, h: m.height * pos.escalaY }, cena.formato, o.width / o.height);
+  return { mascote, caixa: Object.fromEntries(Object.entries(caixa).map(([k, v]) => [k, +v.toFixed(4)])) };
+}
+
 async function ilustradorElementos(cena, tarefa, opcao, ctx) {
   if (opcao.tipo === 'procedural') return desenharPorCodigo(cena, tarefa, opcao, ctx);
   if (opcao.tipo === 'gerar') {
     const c = await componente(opcao, tarefa, ctx);
-    substituir(cena, tarefa.no, [{ id: tarefa.no, papel: 'elemento', tipo: 'imagem', asset: c.asset, caixa: caixaDe(tarefa.caixa), encaixe: 'conter', origem: c.origem }]);
+    const no = { id: tarefa.no, papel: 'elemento', tipo: 'imagem', asset: c.asset, caixa: caixaDe(tarefa.caixa), encaixe: 'conter', origem: c.origem };
+    // Objeto segurado: vai para a mão erguida do NOSSO mascote (a caixa do grafo é a
+    // mão do personagem da referência), atrás dele, para os dedos ficarem por cima.
+    const naMao = opcao.pedido.tipo === 'objeto' && (await objetoNaMao(cena, c.asset, ctx));
+    if (naMao) {
+      no.caixa = naMao.caixa;
+      no.ancora = 'base';
+      cena.nos = cena.nos.filter((n) => !(n.id === tarefa.no || n.id.startsWith(`${tarefa.no}-`)));
+      cena.nos.splice(cena.nos.indexOf(naMao.mascote), 0, no);
+      return { componente: c.componente, na_mao: true };
+    }
+    substituir(cena, tarefa.no, [no]);
     return { componente: c.componente };
   }
   const item = itemDoBanco(ctx.banco, opcao);
