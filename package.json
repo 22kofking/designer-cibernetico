@@ -7,13 +7,15 @@
     "test": "node --test testes/*.test.js",
     "editor": "node ferramentas/servidor.js",
     "render": "node src/node/cli.js render",
-    "validar": "node src/node/cli.js validar"
+    "validar": "node src/node/cli.js validar",
+    "banco": "node src/node/banco-cli.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@huggingface/transformers": "^4.3.1",
     "canvas": "^3.2.3",
     "fabric": "^7.4.0",
     "jsdom": "^29.1.1",
