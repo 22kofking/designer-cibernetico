@@ -50,7 +50,7 @@ export function paradasDoEscurecimento(no, cor = '#050203') {
 }
 
 // Fundo sem material nosso: gradiente com a paleta medida, do escuro para o claro.
-function gradienteDaPaleta(no) {
+export function gradienteDaPaleta(no) {
   const cores = (no.estilo?.paleta ?? []).map((p) => p.cor);
   if (!cores.length) return [[0, '#050203'], [1, '#3a1206']];
   const ordem = [...cores].sort((a, b) => hexParaLab(a)[0] - hexParaLab(b)[0]);
@@ -85,7 +85,7 @@ function blocoDeTexto(linhas, arestas) {
 }
 
 // Copia o arquivo do item do banco para assets/ do molde (vetor vira PNG).
-async function trazerAsset(banco, item, pastaMolde) {
+export async function trazerAsset(banco, item, pastaMolde) {
   const nome = `${item.id}.png`;
   const destino = path.join(pastaMolde, 'assets', nome);
   const original = path.join(pastaDoItem(banco.raiz, item), item.arquivos.original);
