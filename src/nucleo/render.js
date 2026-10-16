@@ -98,6 +98,7 @@ function aplicarComum(obj, no) {
 //   efeitos.sombra   { cor, opacidade, desfoque, dx, dy }
 //   efeitos.brilho   { cor, opacidade, tamanho }       brilho externo
 //   efeitos.contorno { cor, largura }                  só texto e retângulo
+//   efeitos.relevo   { cor, profundidade, angulo }     só texto (ver aplicarRelevo)
 // O Fabric tem uma sombra por objeto: o brilho vira uma cópia logo atrás,
 // marcada com efeitoDe para o editor não a tratar como camada.
 function sombraFabric(fabric, s, desfoque, dx = 0, dy = 0) {
@@ -107,14 +108,21 @@ function sombraFabric(fabric, s, desfoque, dx = 0, dy = 0) {
 function aplicarEfeitos(fabric, objs, no, copiar) {
   const ef = no.efeitos ?? {};
   const saida = [];
+  const inicioDoRelevo = new Map();
   for (const obj of objs) {
+    if (obj.efeitoDe) {
+      if (obj.relevoDe && !inicioDoRelevo.has(obj.relevoDe)) inicioDoRelevo.set(obj.relevoDe, saida.length);
+      saida.push(obj);
+      continue;
+    }
     if (ef.brilho && (ef.brilho.opacidade ?? 1) > 0 && copiar) {
       const atras = copiar(obj);
       atras.set({ shadow: sombraFabric(fabric, { cor: '#ffffff', opacidade: 0.8, ...ef.brilho }, ef.brilho.tamanho ?? 20), selectable: false, evented: false });
       atras.idNo = obj.idNo;
       atras.efeitoDe = no.id;
       if (obj.indiceLinha !== undefined) atras.indiceLinha = obj.indiceLinha;
-      saida.push(atras);
+      // o brilho fica atrás de tudo, inclusive do relevo
+      saida.splice(inicioDoRelevo.get(obj) ?? saida.length, 0, atras);
     }
     if (ef.sombra && (ef.sombra.opacidade ?? 0.6) > 0) {
       obj.set('shadow', sombraFabric(fabric, ef.sombra, ef.sombra.desfoque ?? 10, ef.sombra.dx ?? 0, ef.sombra.dy ?? 0));
@@ -193,52 +201,90 @@ function objetosTexto(fabric, no, caixa, medidor, formato) {
   const linhas = encaixarTexto(no, caixa, medidor, formato);
   const base = linhaDeBase(fabric, no.fonte);
   const { altCaixaAlta } = medidor.metricas(no.fonte);
-  const objs = linhas.map((l, i) => {
-    const estilo = no.estilos?.[l.estilo] ?? {};
-    const topoObjeto = l.base - base * l.tamanho;
-    const t = new fabric.FabricText(l.texto, {
-      left: l.x,
-      top: topoObjeto,
-      fontSize: l.tamanho,
-      fontFamily: no.fonte.familia,
-      fontWeight: no.fonte.peso,
-      charSpacing: (no.espacamento ?? 0) * 1000,
-      fill: estilo.cor ?? '#ffffff',
-      originX: 'left',
-      originY: 'top',
-    });
-    if (estilo.rampa) {
-      // degradê vertical do topo da maiúscula até a linha de base
-      const y1 = (base - altCaixaAlta) * l.tamanho;
-      const y2 = base * l.tamanho;
-      t.set('fill', new fabric.Gradient({
-        type: 'linear',
-        gradientUnits: 'pixels',
-        coords: { x1: 0, y1, x2: 0, y2 },
-        colorStops: estilo.rampa.map(([offset, color]) => ({ offset, color })),
-      }));
+  const objs = [];
+  linhas.forEach((l, i) => {
+    const pedacos = l.trechos ?? [{ texto: l.texto, estilo: l.estilo, dx: 0, escala: 1 }];
+    for (const p of pedacos) {
+      if (!p.texto) continue;
+      const estilo = no.estilos?.[p.estilo ?? l.estilo] ?? {};
+      const tamanho = l.tamanho * (p.escala ?? 1);
+      const t = new fabric.FabricText(p.texto, {
+        left: l.x + p.dx,
+        top: l.base - base * tamanho,
+        fontSize: tamanho,
+        fontFamily: no.fonte.familia,
+        fontWeight: no.fonte.peso,
+        charSpacing: (l.espacamento ?? 0) * 1000,
+        fill: estilo.cor ?? '#ffffff',
+        originX: 'left',
+        originY: 'top',
+      });
+      if (estilo.rampa) {
+        // degradê vertical do topo da maiúscula até a linha de base
+        const y1 = (base - altCaixaAlta) * tamanho;
+        const y2 = base * tamanho;
+        t.set('fill', new fabric.Gradient({
+          type: 'linear',
+          gradientUnits: 'pixels',
+          coords: { x1: 0, y1, x2: 0, y2 },
+          colorStops: estilo.rampa.map(([offset, color]) => ({ offset, color })),
+        }));
+      }
+      const sombra = no.sombra;
+      if (sombra && sombra.opacidade > 0) {
+        t.set('shadow', new fabric.Shadow({
+          color: corComOpacidade(sombra.cor ?? '#000000', sombra.opacidade),
+          blur: (sombra.desfoque ?? 0) * tamanho,
+          offsetX: (sombra.desvio?.[0] ?? 0) * tamanho,
+          offsetY: (sombra.desvio?.[1] ?? 0) * tamanho,
+        }));
+      }
+      aplicarComum(t, no);
+      t.idNo = no.id;
+      t.indiceLinha = i;
+      t.corRelevo = estilo.relevo;
+      objs.push(t);
     }
-    const sombra = no.sombra;
-    if (sombra && sombra.opacidade > 0) {
-      t.set('shadow', new fabric.Shadow({
-        color: corComOpacidade(sombra.cor ?? '#000000', sombra.opacidade),
-        blur: (sombra.desfoque ?? 0) * l.tamanho,
-        offsetX: (sombra.desvio?.[0] ?? 0) * l.tamanho,
-        offsetY: (sombra.desvio?.[1] ?? 0) * l.tamanho,
-      }));
+  });
+  const copiarTexto = (o) => new fabric.FabricText(o.text, {
+    left: o.left, top: o.top, fontSize: o.fontSize, fontFamily: o.fontFamily, fontWeight: o.fontWeight, charSpacing: o.charSpacing,
+    fill: o.fill, originX: 'left', originY: 'top', angle: o.angle, opacity: o.opacity, visible: o.visible, flipX: o.flipX, flipY: o.flipY,
+  });
+  return aplicarEfeitos(fabric, aplicarRelevo(objs, no, copiarTexto), no, copiarTexto);
+}
+
+// Relevo 3D (extrusão) do texto, como o "bisel" dos banners: cópias da letra
+// empilhadas na direção do ângulo, na cor do relevo, atrás da letra.
+//   efeitos.relevo { cor, profundidade (fração do corpo), angulo (graus, 90 = para baixo) }
+// Cada estilo pode trocar a cor (estilos.dourado.relevo = '#7a3d00').
+// A sombra da letra passa para a cópia mais funda, para cair atrás do relevo.
+function aplicarRelevo(objs, no, copiar) {
+  const r = no.efeitos?.relevo;
+  if (!r || !(r.profundidade > 0)) return objs;
+  const saida = [];
+  const ang = ((r.angulo ?? 90) * Math.PI) / 180;
+  for (const o of objs) {
+    const prof = r.profundidade * o.fontSize;
+    const passos = Math.max(1, Math.min(40, Math.ceil(prof)));
+    const passo = prof / passos;
+    const cor = o.corRelevo ?? r.cor ?? '#5a3200';
+    for (let k = passos; k >= 1; k--) {
+      const c = copiar(o);
+      c.set({
+        left: o.left + Math.cos(ang) * passo * k, top: o.top + Math.sin(ang) * passo * k,
+        fill: cor, stroke: cor, strokeWidth: passo * 1.5, strokeLineJoin: 'round', selectable: false, evented: false,
+      });
+      if (k === passos && o.shadow) c.set('shadow', o.shadow);
+      c.idNo = o.idNo;
+      c.efeitoDe = o.idNo;
+      c.relevoDe = o;
+      c.indiceLinha = o.indiceLinha;
+      saida.push(c);
     }
-    aplicarComum(t, no);
-    t.idNo = no.id;
-    t.indiceLinha = i;
-    return t;
-  });
-  return aplicarEfeitos(fabric, objs, no, (o) => {
-    const copia = new fabric.FabricText(o.text, {
-      left: o.left, top: o.top, fontSize: o.fontSize, fontFamily: o.fontFamily, fontWeight: o.fontWeight, charSpacing: o.charSpacing,
-      fill: o.fill, originX: 'left', originY: 'top', angle: o.angle, opacity: o.opacity, visible: o.visible, flipX: o.flipX, flipY: o.flipY,
-    });
-    return copia;
-  });
+    o.set('shadow', null);
+    saida.push(o);
+  }
+  return saida;
 }
 
 // Monta todos os nós da cena no canvas, de baixo para cima.

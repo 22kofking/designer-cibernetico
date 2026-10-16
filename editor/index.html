@@ -113,7 +113,14 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
 .botoes { display: flex; flex-wrap: wrap; gap: 4px; }
 .alinhar button { min-width: 34px; justify-content: center; font-size: 15px; padding: 3px 6px; }
 #linhas { display: grid; gap: 6px; }
-.linha { display: grid; grid-template-columns: minmax(0, 1fr) 90px 56px 26px; gap: 4px; }
+.linha { display: grid; gap: 4px; padding: 6px; border: 1px solid var(--linha); border-radius: 6px; }
+.linha .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.linha .ctl label { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--tinta-suave); }
+.linha .ctl input[type="number"] { width: 64px; }
+.linha .x { margin-left: auto; }
+.texto-trechos { font-weight: 500; font-size: 13px; }
+.trechos { display: grid; gap: 4px; padding-left: 8px; border-left: 2px solid var(--ouro); }
+.trecho { display: grid; grid-template-columns: minmax(0, 1fr) 88px 58px 26px; gap: 4px; }
 .estilo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 400 12px var(--f-dado); }
 .estilo span { min-width: 80px; }
 .parada { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; }

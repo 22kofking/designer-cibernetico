@@ -768,15 +768,31 @@ function deslocar(no, dx, dy) {
   agendarRedesenho().then(mostrarTransformacao);
 }
 
+const opcoesEstilo = (estilos, atual) => estilos.map((e) => `<option ${atual === e ? 'selected' : ''}>${esc(e)}</option>`).join('');
+
+function linhaDeTexto(no, l, i, estilos) {
+  const trechos = l.trechos?.length ? `<div class="trechos">${l.trechos.map((t, k) => `<div class="trecho" data-k="${k}">
+      <input class="tt" value="${esc(t.texto)}" aria-label="Pedaço ${k + 1}">
+      <select class="te" aria-label="Estilo do pedaço">${opcoesEstilo(estilos, t.estilo)}</select>
+      <input class="tz" type="number" step="0.05" min="0.3" max="4" value="${t.escala ?? 1}" title="Tamanho do pedaço (1 = igual à linha)" aria-label="Tamanho do pedaço">
+      <button class="tx" type="button" title="Remover pedaço">×</button></div>`).join('')}
+      <div class="botoes"><button class="tmais pequeno" type="button">+ pedaço</button><button class="tjuntar pequeno" type="button">Uma cor só</button></div></div>` : '';
+  return `<div class="linha" data-i="${i}">
+    ${l.trechos?.length ? `<span class="texto-trechos">${esc(l.trechos.map((t) => t.texto).join(''))}</span>` : `<input class="t" value="${esc(l.texto)}" aria-label="Texto da linha ${i + 1}">`}
+    <div class="ctl">
+      ${l.trechos?.length ? '' : `<select class="e" aria-label="Estilo">${opcoesEstilo(estilos, l.estilo)}</select>`}
+      <label title="Peso: tamanho relativo da linha">peso<input class="p" type="number" step="0.05" min="0.2" value="${l.peso ?? 1}"></label>
+      <label title="Espaço entre letras desta linha (em)">esp.<input class="s" type="number" step="0.005" value="${l.espacamento ?? ''}" placeholder="${no.espacamento ?? 0}"></label>
+      ${l.trechos?.length ? '' : '<button class="dividir pequeno" type="button" title="Cores e tamanhos diferentes na mesma linha">Cores</button>'}
+      <button class="x" type="button" title="Remover linha">×</button>
+    </div>${trechos}</div>`;
+}
+
 function painelTexto(no) {
   const estilos = Object.keys(no.estilos ?? {});
   const familias = [...new Set([...(cena.fontes ?? []).map((f) => f.familia), no.fonte?.familia, 'Arial', 'Impact', 'Georgia'].filter(Boolean))];
-  return `<p class="dica">Cada linha: texto, estilo e peso (a linha de peso 4 sai 4x maior). O encaixe é refeito sozinho.</p>
-    <div id="linhas">${no.linhas.map((l, i) => `<div class="linha" data-i="${i}">
-      <input class="t" value="${esc(l.texto)}" aria-label="Texto da linha ${i + 1}">
-      <select class="e" aria-label="Estilo">${estilos.map((e) => `<option ${l.estilo === e ? 'selected' : ''}>${esc(e)}</option>`).join('')}</select>
-      <input class="p" type="number" step="0.25" min="0.25" value="${l.peso ?? 1}" aria-label="Peso">
-      <button class="x" type="button" title="Remover linha">×</button></div>`).join('')}</div>
+  return `<p class="dica">Cada linha: texto, estilo, peso (a linha de peso 4 sai 4x maior) e espaço entre letras. "Cores" divide a linha em pedaços, cada um com a sua cor e tamanho. O encaixe é refeito sozinho.</p>
+    <div id="linhas">${no.linhas.map((l, i) => linhaDeTexto(no, l, i, estilos)).join('')}</div>
     <div class="botoes"><button id="mais" type="button">+ linha</button></div>
     <div class="linha-ctl">
       <label class="sel"><span>Fonte</span><select data-campo="x-familia">${familias.map((f) => `<option ${no.fonte?.familia === f ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select></label>
@@ -795,7 +811,8 @@ function painelTexto(no) {
       const st = no.estilos[e];
       return `<div class="estilo" data-estilo="${esc(e)}"><span>${esc(e)}</span>${st.rampa
         ? st.rampa.map((p, i) => `<input type="color" data-rampa="${i}" value="${p[1]}" title="parada ${Math.round(p[0] * 100)}%">`).join('') + '<button type="button" class="sem-rampa" title="Trocar o degradê por cor chapada">chapada</button>'
-        : `<input type="color" data-cor value="${st.cor ?? '#ffffff'}"><button type="button" class="com-rampa" title="Trocar por degradê">degradê</button>`}</div>`;
+        : `<input type="color" data-cor value="${st.cor ?? '#ffffff'}"><button type="button" class="com-rampa" title="Trocar por degradê">degradê</button>`}
+        <label class="cor" title="Cor do relevo 3D deste estilo">relevo<input type="color" data-relevo value="${st.relevo ?? no.efeitos?.relevo?.cor ?? '#5a3200'}"></label></div>`;
     }).join('')}</div>
     <div class="botoes"><button id="novo-estilo" type="button">+ estilo</button></div>`;
 }
@@ -803,14 +820,44 @@ function painelTexto(no) {
 function ligarTexto(painel, no) {
   const estilos = Object.keys(no.estilos ?? {});
   painel.querySelectorAll('#linhas .linha').forEach((div) => {
-    const l = no.linhas[Number(div.dataset.i)];
-    div.querySelector('.t').oninput = (ev) => { l.texto = ev.target.value; agendarRedesenho(); registrarDepois(`Texto de ${no.id}`); };
-    div.querySelector('.e').onchange = (ev) => { l.estilo = ev.target.value; agendarRedesenho(); registrar(`Estilo da linha de ${no.id}`); };
-    div.querySelector('.p').oninput = (ev) => { l.peso = Number(ev.target.value) || 1; agendarRedesenho(); registrarDepois(`Peso da linha de ${no.id}`); };
-    div.querySelector('.x').onclick = () => {
-      if (no.linhas.length < 2) { aviso('O bloco precisa de pelo menos uma linha', true); return; }
-      no.linhas.splice(Number(div.dataset.i), 1); registrar(`Remover linha de ${no.id}`); agendarRedesenho(); mostrarPropriedades();
+    const i = Number(div.dataset.i);
+    const l = no.linhas[i];
+    const q = (sel) => div.querySelector(sel);
+    const sincronizar = () => { l.texto = l.trechos.map((t) => t.texto).join(''); const span = q('.texto-trechos'); if (span) span.textContent = l.texto; };
+    if (q('.t')) q('.t').oninput = (ev) => { l.texto = ev.target.value; agendarRedesenho(); registrarDepois(`Texto de ${no.id}`); };
+    if (q('.e')) q('.e').onchange = (ev) => { l.estilo = ev.target.value; agendarRedesenho(); registrar(`Estilo da linha de ${no.id}`); };
+    q('.p').oninput = (ev) => { l.peso = Number(ev.target.value) || 1; agendarRedesenho(); registrarDepois(`Peso da linha de ${no.id}`); };
+    q('.s').oninput = (ev) => {
+      if (ev.target.value === '') delete l.espacamento; else l.espacamento = Number(ev.target.value);
+      agendarRedesenho(); registrarDepois(`Espaçamento da linha de ${no.id}`);
     };
+    q('.x').onclick = () => {
+      if (no.linhas.length < 2) { aviso('O bloco precisa de pelo menos uma linha', true); return; }
+      no.linhas.splice(i, 1); registrar(`Remover linha de ${no.id}`); agendarRedesenho(); mostrarPropriedades();
+    };
+    if (q('.dividir')) q('.dividir').onclick = () => {
+      // divide na última palavra: "DE ATÉ 2%" vira "DE ATÉ " + "2%"
+      const m = l.texto.match(/^(.*\s)(\S+)$/);
+      l.trechos = m ? [{ texto: m[1], estilo: l.estilo }, { texto: m[2], estilo: estilos.find((e) => e !== l.estilo) ?? l.estilo }] : [{ texto: l.texto, estilo: l.estilo }];
+      registrar(`Cores por palavra em ${no.id}`); agendarRedesenho(); mostrarPropriedades();
+    };
+    div.querySelectorAll('.trecho').forEach((tdiv) => {
+      const t = l.trechos[Number(tdiv.dataset.k)];
+      tdiv.querySelector('.tt').oninput = (ev) => { t.texto = ev.target.value; sincronizar(); agendarRedesenho(); registrarDepois(`Texto de ${no.id}`); };
+      tdiv.querySelector('.te').onchange = (ev) => { t.estilo = ev.target.value; agendarRedesenho(); registrar(`Cor do pedaço em ${no.id}`); };
+      tdiv.querySelector('.tz').oninput = (ev) => {
+        const v = Number(ev.target.value);
+        if (!v || v === 1) delete t.escala; else t.escala = v;
+        agendarRedesenho(); registrarDepois(`Tamanho do pedaço em ${no.id}`);
+      };
+      tdiv.querySelector('.tx').onclick = () => {
+        l.trechos.splice(Number(tdiv.dataset.k), 1);
+        if (!l.trechos.length) delete l.trechos; else sincronizar();
+        registrar(`Remover pedaço em ${no.id}`); agendarRedesenho(); mostrarPropriedades();
+      };
+    });
+    if (q('.tmais')) q('.tmais').onclick = () => { l.trechos.push({ texto: ' novo', estilo: l.trechos.at(-1).estilo }); sincronizar(); registrar(`Novo pedaço em ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
+    if (q('.tjuntar')) q('.tjuntar').onclick = () => { l.estilo = l.trechos[0].estilo; delete l.trechos; registrar(`Uma cor só em ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
   });
   $('#mais').onclick = () => { no.linhas.push({ texto: 'Nova linha', estilo: estilos[0], peso: 1 }); registrar(`Nova linha em ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
   ligar(painel, no, 'x-familia', (v) => { no.fonte = { ...no.fonte, familia: v }; }, `Fonte de ${no.id}`);
@@ -840,6 +887,8 @@ function ligarTexto(painel, no) {
   painel.querySelectorAll('#estilos .estilo').forEach((div) => {
     const st = no.estilos[div.dataset.estilo];
     div.querySelectorAll('[data-rampa]').forEach((el) => { el.oninput = () => { st.rampa[Number(el.dataset.rampa)][1] = el.value; agendarRedesenho(); registrarDepois(`Cor de ${no.id}`); }; });
+    const relevo = div.querySelector('[data-relevo]');
+    if (relevo) relevo.oninput = () => { st.relevo = relevo.value; agendarRedesenho(); registrarDepois(`Relevo de ${no.id}`); };
     const cor = div.querySelector('[data-cor]');
     if (cor) cor.oninput = () => { st.cor = cor.value; agendarRedesenho(); registrarDepois(`Cor de ${no.id}`); };
     const sem = div.querySelector('.sem-rampa');
@@ -866,14 +915,16 @@ const PADRAO_EFEITO = {
   sombra: { cor: '#000000', opacidade: 0.6, desfoque: 18, dx: 6, dy: 8 },
   brilho: { cor: '#ffe066', opacidade: 0.85, tamanho: 28 },
   contorno: { cor: '#000000', largura: 4 },
+  relevo: { cor: '#5a3200', profundidade: 0.05, angulo: 90 },
 };
 
 function painelEfeitos(no) {
   const ef = no.efeitos ?? {};
-  const legado = no.tipo === 'bloco_texto' && no.sombra?.opacidade > 0 && !ef.sombra;
+  const legado = false;
   const bloco = (k, titulo, corpo) => `<div class="efeito ${ef[k] ? 'ligado' : ''}"><label class="chk titulo"><input type="checkbox" data-efeito="${k}" ${ef[k] ? 'checked' : ''}> ${titulo}</label>${ef[k] ? `<div class="corpo-efeito">${corpo(ef[k])}</div>` : ''}</div>`;
   const pode = no.tipo === 'bloco_texto' || no.tipo === 'retangulo';
   return `${legado ? '<p class="dica">Este texto já tem a sombra da ficha (proporcional à letra). Ligar a sombra aqui troca pela sombra em pixels.</p>' : ''}
+    ${no.tipo === 'bloco_texto' ? sombraDaLetra(no) : ''}
     ${bloco('sombra', 'Sombra projetada', (s) => `${corCampo('Cor', s.cor, 'e-sombra-cor')}
       ${deslizante('Opacidade', s.opacidade ?? 0.6, { min: 0, max: 1, passo: 0.01, id: 'e-sombra-opacidade', mostrar: (v) => `${Math.round(v * 100)}%` })}
       ${deslizante('Desfoque', s.desfoque ?? 10, { min: 0, max: 120, passo: 1, id: 'e-sombra-desfoque', mostrar: (v) => `${v}px` })}
@@ -881,11 +932,38 @@ function painelEfeitos(no) {
     ${bloco('brilho', 'Brilho externo', (s) => `${corCampo('Cor', s.cor, 'e-brilho-cor')}
       ${deslizante('Opacidade', s.opacidade ?? 0.8, { min: 0, max: 1, passo: 0.01, id: 'e-brilho-opacidade', mostrar: (v) => `${Math.round(v * 100)}%` })}
       ${deslizante('Tamanho', s.tamanho ?? 20, { min: 0, max: 160, passo: 1, id: 'e-brilho-tamanho', mostrar: (v) => `${v}px` })}`)}
+    ${no.tipo === 'bloco_texto' ? bloco('relevo', 'Relevo 3D', (s) => `${corCampo('Cor', s.cor, 'e-relevo-cor')}
+      ${deslizante('Profundidade', s.profundidade ?? 0.05, { min: 0, max: 0.25, passo: 0.005, id: 'e-relevo-profundidade', mostrar: (v) => `${Math.round(v * 100)}%` })}
+      ${deslizante('Ângulo', s.angulo ?? 90, { min: 0, max: 180, passo: 1, id: 'e-relevo-angulo', mostrar: (v) => `${v}°` })}
+      <p class="dica">Profundidade em % do corpo da letra. Cada estilo pode ter a própria cor de relevo (em Estilos das linhas).</p>`) : ''}
     ${pode ? bloco('contorno', 'Contorno', (s) => `${corCampo('Cor', s.cor, 'e-contorno-cor')}
       ${deslizante('Largura', s.largura ?? 4, { min: 0, max: 40, passo: 0.5, id: 'e-contorno-largura', mostrar: (v) => `${v}px` })}`) : '<p class="dica">Contorno: só em texto e retângulo.</p>'}`;
 }
 
+// Sombra proporcional à letra (campo "sombra" do bloco, em frações do corpo):
+// é o halo escuro atrás do texto dos banners; acompanha o tamanho de cada linha.
+function sombraDaLetra(no) {
+  const s = no.sombra;
+  return `<div class="efeito ${s ? 'ligado' : ''}"><label class="chk titulo"><input type="checkbox" data-sombra-letra ${s ? 'checked' : ''}> Sombra da letra (proporcional)</label>${s ? `<div class="corpo-efeito">
+    ${corCampo('Cor', s.cor ?? '#000000', 'l-cor')}
+    ${deslizante('Opacidade', s.opacidade ?? 0.8, { min: 0, max: 1, passo: 0.01, id: 'l-opacidade', mostrar: (v) => `${Math.round(v * 100)}%` })}
+    ${deslizante('Desfoque', s.desfoque ?? 0.2, { min: 0, max: 1, passo: 0.01, id: 'l-desfoque', mostrar: (v) => `${Math.round(v * 100)}%` })}
+    ${deslizante('Descer', s.desvio?.[1] ?? 0.05, { min: -0.3, max: 0.3, passo: 0.005, id: 'l-dy', mostrar: (v) => `${Math.round(v * 100)}%` })}</div>` : ''}</div>`;
+}
+
 function ligarEfeitos(painel, no) {
+  const chk = painel.querySelector('[data-sombra-letra]');
+  if (chk) {
+    chk.onchange = () => {
+      if (chk.checked) no.sombra = { cor: '#000000', opacidade: 0.85, desfoque: 0.3, desvio: [0, 0.06] }; else delete no.sombra;
+      registrar(`${chk.checked ? 'Ligar' : 'Desligar'} sombra da letra em ${no.id}`); agendarRedesenho(); mostrarPropriedades();
+    };
+    const pct = (v) => `${Math.round(v * 100)}%`;
+    ligar(painel, no, 'l-cor', (v) => { no.sombra.cor = v; }, `Sombra de ${no.id}`);
+    ligar(painel, no, 'l-opacidade', (v, el) => { no.sombra.opacidade = v; el.dataset.mostrar = pct(v); }, `Sombra de ${no.id}`);
+    ligar(painel, no, 'l-desfoque', (v, el) => { no.sombra.desfoque = v; el.dataset.mostrar = pct(v); }, `Sombra de ${no.id}`);
+    ligar(painel, no, 'l-dy', (v, el) => { no.sombra.desvio = [no.sombra.desvio?.[0] ?? 0, v]; el.dataset.mostrar = pct(v); }, `Sombra de ${no.id}`);
+  }
   painel.querySelectorAll('[data-efeito]').forEach((el) => {
     el.onchange = () => {
       const k = el.dataset.efeito;
@@ -900,11 +978,12 @@ function ligarEfeitos(painel, no) {
       mostrarPropriedades();
     };
   });
-  for (const [k, campos] of Object.entries({ sombra: ['cor', 'opacidade', 'desfoque', 'dx', 'dy'], brilho: ['cor', 'opacidade', 'tamanho'], contorno: ['cor', 'largura'] })) {
+  const mostrarEfeito = { opacidade: (v) => `${Math.round(v * 100)}%`, profundidade: (v) => `${Math.round(v * 100)}%`, angulo: (v) => `${v}°` };
+  for (const [k, campos] of Object.entries({ sombra: ['cor', 'opacidade', 'desfoque', 'dx', 'dy'], brilho: ['cor', 'opacidade', 'tamanho'], contorno: ['cor', 'largura'], relevo: ['cor', 'profundidade', 'angulo'] })) {
     for (const c of campos) {
       ligar(painel, no, `e-${k}-${c}`, (v, el) => {
         no.efeitos[k][c] = v;
-        if (el.type === 'range') el.dataset.mostrar = c === 'opacidade' ? `${Math.round(v * 100)}%` : `${v}px`;
+        if (el.type === 'range') el.dataset.mostrar = (mostrarEfeito[c] ?? ((x) => `${x}px`))(v);
       }, `${k[0].toUpperCase() + k.slice(1)} de ${no.id}`);
     }
   }
@@ -913,7 +992,7 @@ function ligarEfeitos(painel, no) {
 // ---------- abrir, salvar e exportar ----------
 
 function chaveRascunho() {
-  return `mesa:rascunho:${urlCena?.href ?? cena?.nome ?? 'cena'}`;
+  return `mesa:rascunho:v2:${urlCena?.href ?? cena?.nome ?? 'cena'}`;
 }
 
 async function abrir(json, base, { rascunho = true } = {}) {
