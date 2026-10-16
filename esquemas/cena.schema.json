@@ -79,6 +79,15 @@
             "contraste": { "type": "number", "minimum": -1, "maximum": 1 },
             "saturacao": { "type": "number", "minimum": -1, "maximum": 1 },
             "matiz": { "type": "number", "minimum": -180, "maximum": 180 },
+            "tom": {
+              "description": "Tinge a imagem com uma cor (mistura 'tint' com intensidade).",
+              "type": "object",
+              "properties": {
+                "cor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+                "intensidade": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "required": ["cor"]
+            },
             "desfoque": { "type": "number", "minimum": 0, "maximum": 1 }
           }
         },

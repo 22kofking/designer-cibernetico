@@ -40,3 +40,12 @@ test('ajustes e mistura mudam a imagem embutida', async () => {
   const m = pixel(mistura, 100, 50);
   assert.ok(m[0] > 100 && m[0] < 150 && m[1] < 20, `multiplicar errado: ${m}`);
 });
+
+test('tom tinge a imagem embutida com a cor escolhida', async () => {
+  const tingida = await renderizar(base([{ id: 'i', tipo: 'imagem', asset: PNG_VERMELHO, caixa: { x: 0, y: 0, w: 1, h: 1 }, encaixe: 'esticar', ajustes: { tom: { cor: '#0000ff', intensidade: 1 } } }]), pasta);
+  const [r, , b] = pixel(tingida, 100, 50);
+  assert.ok(b > 200 && r < 60, `tom azul não aplicou: ${pixel(tingida, 100, 50)}`);
+  const meio = await renderizar(base([{ id: 'i', tipo: 'imagem', asset: PNG_VERMELHO, caixa: { x: 0, y: 0, w: 1, h: 1 }, encaixe: 'esticar', ajustes: { tom: { cor: '#0000ff', intensidade: 0.5 } } }]), pasta);
+  const [rm, , bm] = pixel(meio, 100, 50);
+  assert.ok(rm > r && bm < b, `intensidade não reduziu o tom: ${pixel(meio, 100, 50)}`);
+});

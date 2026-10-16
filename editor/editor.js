@@ -581,6 +581,12 @@ function deslizante(rotulo, valor, { min, max, passo, id, mostrar = (v) => v }) 
   return `<label class="desl"><span>${rotulo}</span><input type="range" data-campo="${id}" min="${min}" max="${max}" step="${passo}" value="${valor}"><output>${mostrar(valor)}</output></label>`;
 }
 
+// Cores que já aparecem na cena (textos, fundos, efeitos): viram amostras para tingir camadas.
+function coresDaCena() {
+  const achadas = [...new Set((JSON.stringify(cena).match(/#[0-9a-fA-F]{6}\b/g) ?? []).map((c) => c.toLowerCase()))];
+  return achadas.slice(0, 16);
+}
+
 function corCampo(rotulo, valor, id) {
   return `<label class="cor"><span>${rotulo}</span><input type="color" data-campo="${id}" value="${valor ?? '#000000'}"></label>`;
 }
@@ -673,6 +679,13 @@ function mostrarPropriedades() {
       ${deslizante('Contraste', a.contraste ?? 0, { min: -1, max: 1, passo: 0.01, id: 'a-contraste', mostrar: (v) => Math.round(v * 100) })}
       ${deslizante('Saturação', a.saturacao ?? 0, { min: -1, max: 1, passo: 0.01, id: 'a-saturacao', mostrar: (v) => Math.round(v * 100) })}
       ${deslizante('Matiz', a.matiz ?? 0, { min: -180, max: 180, passo: 1, id: 'a-matiz', mostrar: (v) => `${v}°` })}
+      <div class="tom">
+        <span>Tom da cor</span>
+        <label class="cor"><span>Cor</span><input type="color" id="a-tom-cor" value="${a.tom?.cor ?? '#ffffff'}"></label>
+        ${deslizante('Intensidade', a.tom?.intensidade ?? 0.5, { min: 0, max: 1, passo: 0.01, id: 'a-tom-int', mostrar: (v) => Math.round(v * 100) })}
+        <div class="amostras">${coresDaCena().map((c) => `<button type="button" class="amostra" data-cor="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>
+        <div class="botoes"><button type="button" id="sem-tom">Sem tom</button></div>
+      </div>
       ${deslizante('Desfoque', a.desfoque ?? 0, { min: 0, max: 1, passo: 0.01, id: 'a-desfoque', mostrar: (v) => Math.round(v * 100) })}
       <div class="botoes"><button type="button" id="zerar-ajustes">Zerar ajustes</button></div>`, false, 'ajustes'));
   }
@@ -709,6 +722,20 @@ function mostrarPropriedades() {
         el.dataset.mostrar = k === 'matiz' ? `${v}°` : String(Math.round(v * 100));
       }, `Ajuste de ${no.id}`);
     }
+    const tomAtual = () => ({ cor: no.ajustes?.tom?.cor ?? '#ffffff', intensidade: no.ajustes?.tom?.intensidade ?? 0.5 });
+    const aplicarTom = (mudanca, rotulo) => {
+      no.ajustes = { ...(no.ajustes ?? {}), tom: { ...tomAtual(), ...mudanca } };
+      agendarRedesenho();
+      registrarDepois(rotulo);
+    };
+    const rotuloTom = `Tom de ${no.id}`;
+    $('#a-tom-cor').oninput = (e) => aplicarTom({ cor: e.target.value }, rotuloTom);
+    painel.querySelector('[data-campo="a-tom-int"]').oninput = (e) => {
+      aplicarTom({ intensidade: Number(e.target.value) }, rotuloTom);
+      e.target.parentElement.querySelector('output').textContent = Math.round(Number(e.target.value) * 100);
+    };
+    painel.querySelectorAll('.amostra').forEach((b) => { b.onclick = () => { $('#a-tom-cor').value = b.dataset.cor; aplicarTom({ cor: b.dataset.cor }, rotuloTom); mostrarPropriedades(); }; });
+    $('#sem-tom').onclick = () => { if (no.ajustes) delete no.ajustes.tom; if (no.ajustes && !Object.keys(no.ajustes).length) delete no.ajustes; registrar(rotuloTom); agendarRedesenho(); mostrarPropriedades(); };
     $('#zerar-ajustes').onclick = () => { delete no.ajustes; registrar(`Zerar ajustes de ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
   }
   if (no.tipo !== 'grupo') ligarEfeitos(painel, no);

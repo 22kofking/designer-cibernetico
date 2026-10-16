@@ -136,7 +136,7 @@ function aplicarEfeitos(fabric, objs, no, copiar) {
 }
 
 // Ajustes de imagem (como as camadas de ajuste, mas no próprio nó):
-//   ajustes { brilho -1..1, contraste -1..1, saturacao -1..1, matiz -180..180 (graus), desfoque 0..1 }
+//   ajustes { brilho -1..1, contraste -1..1, saturacao -1..1, matiz -180..180 (graus), tom {cor, intensidade 0..1}, desfoque 0..1 }
 function aplicarAjustes(fabric, img, ajustes) {
   if (!ajustes) return;
   const f = [];
@@ -144,6 +144,7 @@ function aplicarAjustes(fabric, img, ajustes) {
   if (ajustes.contraste) f.push(new fabric.filters.Contrast({ contrast: ajustes.contraste }));
   if (ajustes.saturacao) f.push(new fabric.filters.Saturation({ saturation: ajustes.saturacao }));
   if (ajustes.matiz) f.push(new fabric.filters.HueRotation({ rotation: ajustes.matiz / 180 }));
+  if (ajustes.tom) f.push(new fabric.filters.BlendColor({ color: ajustes.tom.cor, mode: 'tint', alpha: ajustes.tom.intensidade ?? 0.5 }));
   if (ajustes.desfoque) f.push(new fabric.filters.Blur({ blur: ajustes.desfoque }));
   if (!f.length) return;
   img.filters = f;
