@@ -1,0 +1,15 @@
+{
+ "nome": "punho",
+ "descricao": "punho erguido",
+ "angulos": {
+  "braco_d": -137.1,
+  "antebraco_d": -73.3,
+  "braco_e": 71.8,
+  "antebraco_e": 80.4
+ },
+ "maos": {
+  "d": "como no kit",
+  "e": "como no kit"
+ },
+ "pernas": "como no kit"
+}

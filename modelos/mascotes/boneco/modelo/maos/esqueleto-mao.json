@@ -1,0 +1,241 @@
+{
+ "_leia": "Esqueleto de mão padrão, igual para todo bicho. Pontos na ordem do OpenPose Hand (21). Coordenadas locais, mão esticada, palma para a câmera: x para o lado do polegar, y do pulso para as pontas. O comprimento da mão é 1,0; o kit do bicho escala tudo.",
+ "pontos": [
+  "pulso",
+  "polegar_cmc",
+  "polegar_mcp",
+  "polegar_ip",
+  "polegar_ponta",
+  "indicador_mcp",
+  "indicador_pip",
+  "indicador_dip",
+  "indicador_ponta",
+  "medio_mcp",
+  "medio_pip",
+  "medio_dip",
+  "medio_ponta",
+  "anelar_mcp",
+  "anelar_pip",
+  "anelar_dip",
+  "anelar_ponta",
+  "minimo_mcp",
+  "minimo_pip",
+  "minimo_dip",
+  "minimo_ponta"
+ ],
+ "ossos": [
+  [
+   "pulso",
+   "polegar_cmc"
+  ],
+  [
+   "polegar_cmc",
+   "polegar_mcp"
+  ],
+  [
+   "polegar_mcp",
+   "polegar_ip"
+  ],
+  [
+   "polegar_ip",
+   "polegar_ponta"
+  ],
+  [
+   "pulso",
+   "indicador_mcp"
+  ],
+  [
+   "indicador_mcp",
+   "indicador_pip"
+  ],
+  [
+   "indicador_pip",
+   "indicador_dip"
+  ],
+  [
+   "indicador_dip",
+   "indicador_ponta"
+  ],
+  [
+   "pulso",
+   "medio_mcp"
+  ],
+  [
+   "medio_mcp",
+   "medio_pip"
+  ],
+  [
+   "medio_pip",
+   "medio_dip"
+  ],
+  [
+   "medio_dip",
+   "medio_ponta"
+  ],
+  [
+   "pulso",
+   "anelar_mcp"
+  ],
+  [
+   "anelar_mcp",
+   "anelar_pip"
+  ],
+  [
+   "anelar_pip",
+   "anelar_dip"
+  ],
+  [
+   "anelar_dip",
+   "anelar_ponta"
+  ],
+  [
+   "pulso",
+   "minimo_mcp"
+  ],
+  [
+   "minimo_mcp",
+   "minimo_pip"
+  ],
+  [
+   "minimo_pip",
+   "minimo_dip"
+  ],
+  [
+   "minimo_dip",
+   "minimo_ponta"
+  ]
+ ],
+ "falanges": {
+  "indicador": [
+   0.2,
+   0.13,
+   0.11
+  ],
+  "medio": [
+   0.22,
+   0.14,
+   0.11
+  ],
+  "anelar": [
+   0.2,
+   0.13,
+   0.11
+  ],
+  "minimo": [
+   0.16,
+   0.1,
+   0.09
+  ],
+  "polegar": [
+   0.19,
+   0.16,
+   0.13
+  ]
+ },
+ "palma": 0.46,
+ "base_dos_dedos": {
+  "indicador": [
+   0.18,
+   0.44
+  ],
+  "medio": [
+   0.06,
+   0.46
+  ],
+  "anelar": [
+   -0.06,
+   0.43
+  ],
+  "minimo": [
+   -0.17,
+   0.38
+  ]
+ },
+ "polegar_base": [
+  0.2,
+  0.1
+ ],
+ "articulacoes_por_dedo": {
+  "dedos": [
+   "mcp",
+   "pip",
+   "dip"
+  ],
+  "polegar": [
+   "cmc",
+   "mcp",
+   "ip"
+  ]
+ },
+ "limites_graus": {
+  "mcp": [
+   -20,
+   90
+  ],
+  "pip": [
+   0,
+   110
+  ],
+  "dip": [
+   0,
+   80
+  ],
+  "abducao": [
+   -20,
+   20
+  ],
+  "polegar_cmc": [
+   0,
+   70
+  ],
+  "polegar_mcp": [
+   0,
+   60
+  ],
+  "polegar_ip": [
+   -10,
+   80
+  ]
+ },
+ "orientacoes_do_pulso": {
+  "palma_camera": "palma para quem vê (empurrar, apresentar, mostrar)",
+  "dorso_camera": "costas da mão para quem vê (punho, segurar de cima)",
+  "lado_polegar": "mão de perfil, polegar para cima (cilíndrica, joinha, bastão)",
+  "lado_minimo": "mão de perfil, mindinho para cima (aperto de mão, cartão)"
+ },
+ "pulso_graus": {
+  "_leia": "giro do pulso em relação ao antebraço, em graus",
+  "flexao": [
+   -70,
+   80
+  ],
+  "desvio": [
+   -20,
+   30
+  ]
+ },
+ "dedos_visiveis": {
+  "_leia": "o kit do bicho diz quantos dedos desenha; o esqueleto é sempre de 5",
+  "humano": [
+   "polegar",
+   "indicador",
+   "medio",
+   "anelar",
+   "minimo"
+  ],
+  "quadrinho_4": [
+   "polegar",
+   "indicador",
+   "medio",
+   "anelar"
+  ],
+  "ave": "asa ou garra: usa polegar, indicador e médio como 3 dedos de pena ou garra"
+ },
+ "camadas_da_mao": [
+  "palma_dorso",
+  "polegar",
+  "dedos_atras",
+  "OBJETO",
+  "dedos_frente"
+ ]
+}

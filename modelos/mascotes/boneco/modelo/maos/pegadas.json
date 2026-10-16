@@ -1,0 +1,621 @@
+{
+ "_leia": "Estilos de pegar objetos. Ângulos de flexão em graus (0 esticado, + dobra para a palma), por dedo na ordem base, meio e ponta (mcp, pip, dip); polegar na ordem cmc, mcp, ip. 'contato' diz onde o objeto toca a mão. 'ordem_das_camadas' é de baixo para cima e diz o que fica na frente do objeto: é o que o montador usa.",
+ "pegadas": {
+  "aberta": {
+   "nome": "Mão aberta",
+   "tipo": "contato",
+   "descricao": "todos os dedos esticados, levemente abertos; apresentar, saudar, segurar algo por cima",
+   "polegar_cmc_mcp_ip": [
+    15,
+    5,
+    5
+   ],
+   "indicador_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "medio_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "anelar_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "minimo_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "abertura_dos_dedos": 10,
+   "pulso": "palma_camera",
+   "contato": [],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "polegar",
+    "dedos_atras",
+    "dedos_frente",
+    "OBJETO"
+   ],
+   "objetos": [
+    "orbe",
+    "bandeja",
+    "moedas"
+   ],
+   "apoio": "objeto repousa na palma, sem dedos na frente"
+  },
+  "empurra": {
+   "nome": "Palma plana",
+   "tipo": "contato",
+   "descricao": "mão aberta com a palma para a câmera, dedos juntos; parar, empurrar, pedir calma",
+   "polegar_cmc_mcp_ip": [
+    10,
+    0,
+    0
+   ],
+   "indicador_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "medio_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "anelar_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "minimo_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "palma_camera",
+   "contato": [],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "polegar",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente"
+   ],
+   "objetos": [],
+   "apoio": null
+  },
+  "punho": {
+   "nome": "Punho cerrado",
+   "tipo": "forca",
+   "descricao": "os 4 dedos dobrados e o polegar por cima do indicador e do médio",
+   "polegar_cmc_mcp_ip": [
+    30,
+    40,
+    50
+   ],
+   "indicador_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "medio_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "anelar_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "minimo_mcp_pip_dip": [
+    85,
+    100,
+    55
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "dorso_camera",
+   "contato": [],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "polegar",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente"
+   ],
+   "objetos": [],
+   "apoio": null
+  },
+  "aponta": {
+   "nome": "Apontar",
+   "tipo": "contato",
+   "descricao": "indicador esticado, os outros dobrados, polegar sobre o médio; aponta para quem vê ou para o alto",
+   "polegar_cmc_mcp_ip": [
+    30,
+    30,
+    40
+   ],
+   "indicador_mcp_pip_dip": [
+    0,
+    0,
+    0
+   ],
+   "medio_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "anelar_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "minimo_mcp_pip_dip": [
+    85,
+    100,
+    55
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "dorso_camera",
+   "contato": [],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "polegar",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente"
+   ],
+   "objetos": [
+    "seta",
+    "tela"
+   ],
+   "apoio": null
+  },
+  "joinha": {
+   "nome": "Joinha",
+   "tipo": "contato",
+   "descricao": "punho com o polegar esticado para cima",
+   "polegar_cmc_mcp_ip": [
+    0,
+    0,
+    0
+   ],
+   "indicador_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "medio_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "anelar_mcp_pip_dip": [
+    85,
+    100,
+    60
+   ],
+   "minimo_mcp_pip_dip": [
+    85,
+    100,
+    55
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "lado_polegar",
+   "contato": [],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "polegar",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente"
+   ],
+   "objetos": [],
+   "apoio": null
+  },
+  "cilindrica": {
+   "nome": "Pegada cilíndrica",
+   "tipo": "forca",
+   "descricao": "dedos envolvem um objeto comprido na vertical; o polegar fecha pelo outro lado",
+   "polegar_cmc_mcp_ip": [
+    40,
+    25,
+    25
+   ],
+   "indicador_mcp_pip_dip": [
+    55,
+    70,
+    40
+   ],
+   "medio_mcp_pip_dip": [
+    58,
+    72,
+    42
+   ],
+   "anelar_mcp_pip_dip": [
+    60,
+    74,
+    44
+   ],
+   "minimo_mcp_pip_dip": [
+    62,
+    76,
+    46
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "lado_polegar",
+   "contato": [
+    "palma",
+    "face interna dos 4 dedos",
+    "ponta do polegar"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente",
+    "polegar"
+   ],
+   "objetos": [
+    "taça",
+    "troféu",
+    "microfone",
+    "lata"
+   ],
+   "apoio": "eixo do objeto na vertical, cruzando a palma"
+  },
+  "empunha": {
+   "nome": "Empunhadura",
+   "tipo": "forca",
+   "descricao": "punho fechado em volta de uma haste fina; a haste atravessa a mão",
+   "polegar_cmc_mcp_ip": [
+    35,
+    35,
+    40
+   ],
+   "indicador_mcp_pip_dip": [
+    80,
+    95,
+    55
+   ],
+   "medio_mcp_pip_dip": [
+    82,
+    97,
+    55
+   ],
+   "anelar_mcp_pip_dip": [
+    84,
+    98,
+    56
+   ],
+   "minimo_mcp_pip_dip": [
+    85,
+    100,
+    55
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "lado_polegar",
+   "contato": [
+    "palma",
+    "dedos",
+    "polegar"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "dedos_frente",
+    "polegar"
+   ],
+   "objetos": [
+    "cajado",
+    "bastão",
+    "ankh",
+    "espada"
+   ],
+   "apoio": "haste sai pelos dois lados do punho"
+  },
+  "esferica": {
+   "nome": "Pegada esférica",
+   "tipo": "forca",
+   "descricao": "dedos abertos e curvados, como em volta de uma bola; polegar do lado oposto",
+   "polegar_cmc_mcp_ip": [
+    45,
+    20,
+    20
+   ],
+   "indicador_mcp_pip_dip": [
+    35,
+    45,
+    30
+   ],
+   "medio_mcp_pip_dip": [
+    38,
+    48,
+    32
+   ],
+   "anelar_mcp_pip_dip": [
+    40,
+    50,
+    34
+   ],
+   "minimo_mcp_pip_dip": [
+    42,
+    52,
+    36
+   ],
+   "abertura_dos_dedos": 15,
+   "pulso": "palma_camera",
+   "contato": [
+    "palma",
+    "pontas dos 4 dedos",
+    "ponta do polegar"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "OBJETO",
+    "dedos_frente",
+    "polegar"
+   ],
+   "objetos": [
+    "orbe",
+    "bola",
+    "ficha grande",
+    "globo"
+   ],
+   "apoio": "centro do objeto a ~0,3 da mão acima da palma"
+  },
+  "pinca": {
+   "nome": "Pinça",
+   "tipo": "precisao",
+   "descricao": "ponta do polegar toca a ponta do indicador; os outros dedos soltos e semidobrados",
+   "polegar_cmc_mcp_ip": [
+    50,
+    25,
+    35
+   ],
+   "indicador_mcp_pip_dip": [
+    35,
+    50,
+    25
+   ],
+   "medio_mcp_pip_dip": [
+    55,
+    65,
+    35
+   ],
+   "anelar_mcp_pip_dip": [
+    60,
+    72,
+    40
+   ],
+   "minimo_mcp_pip_dip": [
+    65,
+    76,
+    42
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "dorso_camera",
+   "contato": [
+    "ponta do polegar",
+    "ponta do indicador"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "polegar",
+    "dedos_frente"
+   ],
+   "objetos": [
+    "moeda",
+    "ficha",
+    "envelope pequeno",
+    "carta"
+   ],
+   "apoio": "objeto fica entre as duas pontas, de frente para a câmera"
+  },
+  "tripe": {
+   "nome": "Tripé",
+   "tipo": "precisao",
+   "descricao": "polegar, indicador e médio se encontram; anelar e mínimo dobrados",
+   "polegar_cmc_mcp_ip": [
+    48,
+    28,
+    30
+   ],
+   "indicador_mcp_pip_dip": [
+    38,
+    50,
+    28
+   ],
+   "medio_mcp_pip_dip": [
+    40,
+    55,
+    30
+   ],
+   "anelar_mcp_pip_dip": [
+    80,
+    95,
+    55
+   ],
+   "minimo_mcp_pip_dip": [
+    82,
+    98,
+    56
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "dorso_camera",
+   "contato": [
+    "ponta do polegar",
+    "ponta do indicador",
+    "ponta do médio"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "polegar",
+    "dedos_frente"
+   ],
+   "objetos": [
+    "caneta",
+    "carta",
+    "cartão VIP",
+    "envelope"
+   ],
+   "apoio": "objeto entre as 3 pontas"
+  },
+  "lateral": {
+   "nome": "Pegada lateral",
+   "tipo": "precisao",
+   "descricao": "polegar esticado apertando o objeto contra o lado do indicador dobrado",
+   "polegar_cmc_mcp_ip": [
+    10,
+    5,
+    5
+   ],
+   "indicador_mcp_pip_dip": [
+    80,
+    95,
+    55
+   ],
+   "medio_mcp_pip_dip": [
+    82,
+    97,
+    55
+   ],
+   "anelar_mcp_pip_dip": [
+    84,
+    98,
+    56
+   ],
+   "minimo_mcp_pip_dip": [
+    85,
+    100,
+    55
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "lado_polegar",
+   "contato": [
+    "ponta do polegar",
+    "lado do indicador"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "polegar"
+   ],
+   "objetos": [
+    "chave",
+    "cartão",
+    "envelope",
+    "ingresso"
+   ],
+   "apoio": "objeto plano e fino, de lado para a câmera"
+  },
+  "gancho": {
+   "nome": "Gancho",
+   "tipo": "forca",
+   "descricao": "os 4 dedos em gancho (primeira junta reta, as outras dobradas), polegar solto; carga pendurada",
+   "polegar_cmc_mcp_ip": [
+    15,
+    10,
+    10
+   ],
+   "indicador_mcp_pip_dip": [
+    10,
+    90,
+    70
+   ],
+   "medio_mcp_pip_dip": [
+    10,
+    92,
+    72
+   ],
+   "anelar_mcp_pip_dip": [
+    10,
+    94,
+    74
+   ],
+   "minimo_mcp_pip_dip": [
+    10,
+    96,
+    76
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "dorso_camera",
+   "contato": [
+    "face interna dos 4 dedos"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "OBJETO",
+    "dedos_frente",
+    "polegar"
+   ],
+   "objetos": [
+    "sacola",
+    "baú com alça",
+    "bolsa",
+    "cesta"
+   ],
+   "apoio": "alça passa por dentro dos dedos; o objeto pende para baixo"
+  },
+  "celular": {
+   "nome": "Segurar celular",
+   "tipo": "precisao",
+   "descricao": "dedos por trás do aparelho, polegar na lateral ou na frente, apoio na palma",
+   "polegar_cmc_mcp_ip": [
+    35,
+    20,
+    15
+   ],
+   "indicador_mcp_pip_dip": [
+    40,
+    45,
+    25
+   ],
+   "medio_mcp_pip_dip": [
+    42,
+    48,
+    26
+   ],
+   "anelar_mcp_pip_dip": [
+    44,
+    50,
+    28
+   ],
+   "minimo_mcp_pip_dip": [
+    46,
+    52,
+    30
+   ],
+   "abertura_dos_dedos": 0,
+   "pulso": "palma_camera",
+   "contato": [
+    "palma",
+    "dedos por trás",
+    "ponta do polegar"
+   ],
+   "ordem_das_camadas": [
+    "palma_dorso",
+    "dedos_atras",
+    "OBJETO",
+    "polegar"
+   ],
+   "objetos": [
+    "celular",
+    "tablet",
+    "painel"
+   ],
+   "apoio": "aparelho em pé, tela para a câmera, dedos não aparecem"
+  }
+ }
+}

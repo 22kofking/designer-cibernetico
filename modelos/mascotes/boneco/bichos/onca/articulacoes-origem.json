@@ -1,0 +1,9 @@
+{"_leia": "Onde fica cada articulação no desenho de origem (pixels de base-onca.png). Marcado uma vez por bicho.",
+ "origem": "/mnt/project-files/mascotes/padrao-folha/onca/base-onca.png",
+ "tipo": "mamifero",
+ "pontos": {"cabeca_topo":[390,55],"pescoco":[390,255],
+  "ombro_d":[210,325],"cotovelo_d":[160,490],"punho_d":[168,625],"mao_fim_d":[165,695],
+  "ombro_e":[580,325],"cotovelo_e":[650,490],"punho_e":[640,625],"mao_fim_e":[635,700],
+  "quadril_d":[300,620],"joelho_d":[300,800],"tornozelo_d":[300,905],"pe_fim_d":[230,960],
+  "quadril_e":[480,620],"joelho_e":[500,800],"tornozelo_e":[510,905],"pe_fim_e":[580,960]},
+ "medidas": {"cabeca_largura":210,"ombros_largura":470,"cintura_y":585,"cintura_largura":270,"antebraco_largura":90}}

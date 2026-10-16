@@ -1,0 +1,15 @@
+{
+ "nome": "frente",
+ "descricao": "pose neutra",
+ "angulos": {
+  "braco_d": 109.6,
+  "antebraco_d": 100.5,
+  "braco_e": 70.4,
+  "antebraco_e": 79.5
+ },
+ "maos": {
+  "d": "como no kit",
+  "e": "como no kit"
+ },
+ "pernas": "como no kit"
+}

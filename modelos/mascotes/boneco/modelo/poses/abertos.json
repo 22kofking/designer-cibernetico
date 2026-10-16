@@ -1,0 +1,15 @@
+{
+ "nome": "abertos",
+ "descricao": "braços abertos",
+ "angulos": {
+  "braco_d": 148.0,
+  "antebraco_d": -138.0,
+  "braco_e": 32.0,
+  "antebraco_e": -42.0
+ },
+ "maos": {
+  "d": "como no kit",
+  "e": "como no kit"
+ },
+ "pernas": "como no kit"
+}

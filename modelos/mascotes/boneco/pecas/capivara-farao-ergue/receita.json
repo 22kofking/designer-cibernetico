@@ -1,0 +1,24 @@
+{
+ "bicho": "capivara",
+ "pose": "ergue",
+ "figurino": "farao",
+ "objeto": null,
+ "camadas": [
+  "sombra",
+  "capivara_perna_d",
+  "capivara_perna_e",
+  "capivara_tronco",
+  "farao_colar",
+  "farao_cinto",
+  "capivara_cabeca",
+  "farao_toucado",
+  "farao_barba",
+  "capivara_braco_d",
+  "capivara_antebraco_d",
+  "farao_bracelete_d",
+  "capivara_braco_e",
+  "farao_bracadeira_e",
+  "capivara_antebraco_e",
+  "farao_bracelete_e"
+ ]
+}

@@ -1,0 +1,98 @@
+[
+ {
+  "nome": "tucano-01-base-semente1",
+  "pose": "frente",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a plain fitted light grey tank top and plain dark grey shorts, full body, standing in a relaxed A-pose, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-01-base-semente2",
+  "pose": "frente",
+  "seed": 2,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a plain fitted light grey tank top and plain dark grey shorts, full body, standing in a relaxed A-pose, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-01-base-semente3",
+  "pose": "frente",
+  "seed": 3,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a plain fitted light grey tank top and plain dark grey shorts, full body, standing in a relaxed A-pose, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-01-base-semente4",
+  "pose": "frente",
+  "seed": 4,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a plain fitted light grey tank top and plain dark grey shorts, full body, standing in a relaxed A-pose, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-02-convite-aponta-sorte",
+  "pose": "aponta",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a red Chinese silk tang jacket with gold frog buttons and a red cap with a gold rim, full body, pointing at the viewer, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-03-envelopes-ergue-sorte",
+  "pose": "ergue",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a red Chinese silk tang jacket with gold frog buttons and a red cap with a gold rim, full body, one arm raised holding a red envelope, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-04-vip-punho-farao",
+  "pose": "punho",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a golden pharaoh headdress with blue stripes, a wide gold collar with turquoise gems and gold armor bracers, full body, raising a fist, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-05-apostas-abertos-rua",
+  "pose": "abertos",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a red baseball cap backwards, a green varsity jacket with white sleeves and a thick gold chain, full body, arms wide open presenting, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-06-telegram-segura-mago",
+  "pose": "segura",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a flowing red and gold sorcerer robe with a high collar, full body, holding a glowing blue crystal orb with both hands, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "tucano-07-redes-celular-pirata",
+  "pose": "celular",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic toucan bird man covered in black feathers with a white feathered throat, a huge orange toucan beak as his mouth wide open in a hyped laugh, dark sunglasses, wearing a brown pirate tricorn hat and a red captain coat with gold trim, full body, holding up a smartphone and pointing at it, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "controle-capivara-aponta-sorte",
+  "pose": "aponta",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic capybara man, dark sunglasses, huge open-mouth grin, wearing a red Chinese silk tang jacket with gold frog buttons and a red cap with a gold rim, full body, pointing at the viewer, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ },
+ {
+  "nome": "controle-capivara-punho-farao",
+  "pose": "punho",
+  "seed": 1,
+  "prompt": "estiloA, anthropomorphic capybara man, dark sunglasses, huge open-mouth grin, wearing a golden pharaoh headdress with blue stripes, a wide gold collar with turquoise gems and gold armor bracers, full body, raising a fist, light grey background",
+  "lora_nome": "estiloA-v1.safetensors",
+  "dtype": "default"
+ }
+]

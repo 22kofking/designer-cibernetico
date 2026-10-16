@@ -1,0 +1,17 @@
+{
+ "bicho": "onca",
+ "pose": "aponta",
+ "figurino": "base",
+ "objeto": null,
+ "camadas": [
+  "sombra",
+  "onca_perna_d",
+  "onca_perna_e",
+  "onca_tronco",
+  "onca_cabeca",
+  "onca_braco_d",
+  "onca_antebraco_d",
+  "onca_braco_e",
+  "onca_antebraco_e"
+ ]
+}
