@@ -681,7 +681,7 @@ function mostrarPropriedades() {
   painel.innerHTML = partes.join('');
   painel.querySelectorAll('details.secao').forEach((d) => { d.ontoggle = () => guardar(`mesa:secao:${d.dataset.chave}`, d.open ? '1' : '0'); });
   ligarTransformar(painel, no);
-  if (no.tipo === 'bloco_texto') ligarTexto(painel, no);
+  if (no.tipo === 'bloco_texto') { ligarTexto(painel, no); focarLinhaPendente(painel); }
   if (no.tipo === 'retangulo') {
     ligar(painel, no, 'r-cor', (v) => { no.cor = v; }, `Cor de ${no.id}`);
     ligar(painel, no, 'r-opacidade_cor', (v, el) => { no.opacidade_cor = v; el.dataset.mostrar = `${Math.round(v * 100)}%`; }, `Cor de ${no.id}`);
@@ -770,6 +770,77 @@ function deslocar(no, dx, dy) {
 
 const opcoesEstilo = (estilos, atual) => estilos.map((e) => `<option ${atual === e ? 'selected' : ''}>${esc(e)}</option>`).join('');
 
+// Enter quebra a linha onde está o cursor (como num editor de texto); Backspace no
+// começo junta com a linha de cima. Vale também dentro dos pedaços de cor.
+let focoPendente = null;
+
+function teclaNaLinha(ev, no, i, k = null) {
+  const el = ev.target;
+  const l = no.linhas[i];
+  const pos = el.selectionStart ?? el.value.length;
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    let nova;
+    if (k === null) {
+      nova = { ...structuredClone(l), texto: l.texto.slice(el.selectionEnd ?? pos).replace(/^\s+/, '') };
+      l.texto = l.texto.slice(0, pos).replace(/\s+$/, '');
+    } else {
+      // divide os pedaços: o que vem antes do cursor fica, o resto vai para a linha nova
+      const t = l.trechos[k];
+      const resto = [{ ...t, texto: t.texto.slice(pos).replace(/^\s+/, '') }, ...l.trechos.slice(k + 1)].filter((x) => x.texto);
+      t.texto = t.texto.slice(0, pos).replace(/\s+$/, '');
+      l.trechos = l.trechos.slice(0, k + 1).filter((x) => x.texto);
+      nova = { ...structuredClone(l), trechos: resto.length ? resto : [{ ...t, texto: '' }] };
+      for (const linha of [l, nova]) {
+        if (linha.trechos.length === 1) { linha.estilo = linha.trechos[0].estilo; linha.texto = linha.trechos[0].texto; delete linha.trechos; }
+        else if (!linha.trechos.length) { delete linha.trechos; linha.texto = ''; }
+        else linha.texto = linha.trechos.map((x) => x.texto).join('');
+      }
+    }
+    no.linhas.splice(i + 1, 0, nova);
+    focoPendente = { linha: i + 1, pos: 0 };
+    registrar(`Quebrar linha em ${no.id}`);
+    agendarRedesenho();
+    mostrarPropriedades();
+  } else if (ev.key === 'Backspace' && pos === 0 && el.selectionEnd === 0 && i > 0 && (k === null || k === 0)) {
+    ev.preventDefault();
+    const cima = no.linhas[i - 1];
+    const fim = cima.texto.length;
+    const pedacos = (linha) => linha.trechos ?? [{ texto: linha.texto, estilo: linha.estilo }];
+    const juntos = [...pedacos(cima), ...pedacos(l)];
+    if (juntos.every((t) => t.estilo === juntos[0].estilo && !t.escala)) {
+      cima.texto = `${cima.texto} ${l.texto}`.trim();
+      delete cima.trechos;
+    } else {
+      if (juntos[pedacos(cima).length - 1]) juntos[pedacos(cima).length - 1] = { ...juntos[pedacos(cima).length - 1], texto: `${juntos[pedacos(cima).length - 1].texto} ` };
+      // pedaços vizinhos iguais viram um só
+      cima.trechos = juntos.reduce((acc, t) => {
+        const ult = acc.at(-1);
+        if (ult && ult.estilo === t.estilo && (ult.escala ?? 1) === (t.escala ?? 1) && ult.caixa_alta === t.caixa_alta) ult.texto += t.texto;
+        else acc.push({ ...t });
+        return acc;
+      }, []);
+      cima.texto = cima.trechos.map((t) => t.texto).join('');
+    }
+    no.linhas.splice(i, 1);
+    focoPendente = { linha: i - 1, pos: fim + 1 };
+    registrar(`Juntar linhas em ${no.id}`);
+    agendarRedesenho();
+    mostrarPropriedades();
+  }
+}
+
+function focarLinhaPendente(painel) {
+  if (!focoPendente) return;
+  const { linha, pos } = focoPendente;
+  focoPendente = null;
+  const campo = painel.querySelector(`.linha[data-i="${linha}"] .t, .linha[data-i="${linha}"] .tt`);
+  if (!campo) return;
+  campo.focus();
+  const p = Math.min(pos, campo.value.length);
+  campo.setSelectionRange(p, p);
+}
+
 function linhaDeTexto(no, l, i, estilos) {
   const trechos = l.trechos?.length ? `<div class="trechos">${l.trechos.map((t, k) => `<div class="trecho" data-k="${k}">
       <input class="tt" value="${esc(t.texto)}" aria-label="Pedaço ${k + 1}">
@@ -791,7 +862,7 @@ function linhaDeTexto(no, l, i, estilos) {
 function painelTexto(no) {
   const estilos = Object.keys(no.estilos ?? {});
   const familias = [...new Set([...(cena.fontes ?? []).map((f) => f.familia), no.fonte?.familia, 'Arial', 'Impact', 'Georgia'].filter(Boolean))];
-  return `<p class="dica">Cada linha: texto, estilo, peso (a linha de peso 4 sai 4x maior) e espaço entre letras. "Cores" divide a linha em pedaços, cada um com a sua cor e tamanho. O encaixe é refeito sozinho.</p>
+  return `<p class="dica">Enter quebra a linha onde está o cursor; Backspace no começo junta com a de cima. Cada linha: texto, estilo, peso (a linha de peso 4 sai 4x maior) e espaço entre letras. "Cores" divide a linha em pedaços, cada um com a sua cor e tamanho. O encaixe é refeito sozinho.</p>
     <div id="linhas">${no.linhas.map((l, i) => linhaDeTexto(no, l, i, estilos)).join('')}</div>
     <div class="botoes"><button id="mais" type="button">+ linha</button></div>
     <div class="linha-ctl">
@@ -825,6 +896,7 @@ function ligarTexto(painel, no) {
     const q = (sel) => div.querySelector(sel);
     const sincronizar = () => { l.texto = l.trechos.map((t) => t.texto).join(''); const span = q('.texto-trechos'); if (span) span.textContent = l.texto; };
     if (q('.t')) q('.t').oninput = (ev) => { l.texto = ev.target.value; agendarRedesenho(); registrarDepois(`Texto de ${no.id}`); };
+    if (q('.t')) q('.t').onkeydown = (ev) => teclaNaLinha(ev, no, i);
     if (q('.e')) q('.e').onchange = (ev) => { l.estilo = ev.target.value; agendarRedesenho(); registrar(`Estilo da linha de ${no.id}`); };
     q('.p').oninput = (ev) => { l.peso = Number(ev.target.value) || 1; agendarRedesenho(); registrarDepois(`Peso da linha de ${no.id}`); };
     q('.s').oninput = (ev) => {
@@ -844,6 +916,7 @@ function ligarTexto(painel, no) {
     div.querySelectorAll('.trecho').forEach((tdiv) => {
       const t = l.trechos[Number(tdiv.dataset.k)];
       tdiv.querySelector('.tt').oninput = (ev) => { t.texto = ev.target.value; sincronizar(); agendarRedesenho(); registrarDepois(`Texto de ${no.id}`); };
+      tdiv.querySelector('.tt').onkeydown = (ev) => teclaNaLinha(ev, no, i, Number(tdiv.dataset.k));
       tdiv.querySelector('.te').onchange = (ev) => { t.estilo = ev.target.value; agendarRedesenho(); registrar(`Cor do pedaço em ${no.id}`); };
       tdiv.querySelector('.tz').oninput = (ev) => {
         const v = Number(ev.target.value);
@@ -1172,8 +1245,11 @@ async function iniciar() {
   canvas.on('object:rotating', acompanharCopias);
   canvas.on('after:render', desenharGuias);
   canvas.on('mouse:up', () => { if (guias.length) { guias = []; limparGuias(); } });
-  canvas.on('selection:created', (e) => selecionarPorId(e.selected[0].idNo, false));
-  canvas.on('selection:updated', (e) => selecionarPorId(e.selected[0].idNo, false));
+  // O redesenho volta a selecionar a mesma camada; refazer o painel nessa hora tiraria o
+  // cursor do campo em que a pessoa está digitando.
+  const aoSelecionar = (e) => { const id = e.selected?.[0]?.idNo; if (id && id !== selecionado) selecionarPorId(id, false); };
+  canvas.on('selection:created', aoSelecionar);
+  canvas.on('selection:updated', aoSelecionar);
   canvas.on('selection:cleared', () => { if (!redesenhando && selecionado) { selecionado = null; desenharCamadas(); mostrarPropriedades(); } });
   window.addEventListener('resize', () => canvas.requestRenderAll());
 
