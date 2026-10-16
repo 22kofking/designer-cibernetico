@@ -9,6 +9,7 @@ import { caixaEmFracoes, caixaEmPixels, validarCena } from '../src/nucleo/cena.j
 import { criarMedidor, montarCena, MISTURAS } from '../src/nucleo/render.js';
 import { abrirPsd, exportarPsd } from './psd-navegador.js';
 import { salvar } from './salvar.js';
+import { iniciarBiblioteca } from './biblioteca.js';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const params = new URLSearchParams(location.search);
@@ -531,19 +532,43 @@ const NOVOS = {
   }),
 };
 
-async function novaImagem(arquivo) {
-  const asset = await lerArquivo(arquivo, 'url');
+// Coloca uma imagem (data URL ou endereço) como camada nova, no meio da peça e em tamanho que caiba.
+async function colocarImagem(asset, nome, origem) {
   const img = await carregarImagem(asset);
   const { largura: W, altura: H } = cena.formato;
   const f = Math.min(1, (W * 0.4) / img.width, (H * 0.8) / img.height);
   const w = img.width * f;
   const h = img.height * f;
   inserirNo({
-    id: idNovo(arquivo.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase() || 'imagem'),
+    id: idNovo(nome.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase() || 'imagem'),
     tipo: 'imagem', papel: 'elemento', asset, encaixe: 'conter',
     caixa: caixaEmFracoes({ x: (W - w) / 2, y: (H - h) / 2, w, h }, cena.formato),
-    origem: { como: `colocada na Mesa (${arquivo.name})` },
-  }, `Colocar ${arquivo.name}`);
+    origem: { como: origem },
+  }, `Colocar ${nome}`);
+}
+
+async function novaImagem(arquivo) {
+  await colocarImagem(await lerArquivo(arquivo, 'url'), arquivo.name, `colocada na Mesa (${arquivo.name})`);
+}
+
+// Item da biblioteca: clique coloca como camada nova; Shift+clique troca a imagem da camada de imagem selecionada
+// (a caixa fica a mesma, o encaixe "conter" mantém a proporção do novo desenho).
+async function colocarDaBiblioteca(item, url, { trocar }) {
+  const no = trocar && selecionado ? acharNo(selecionado) : null;
+  try {
+    if (no?.tipo === 'imagem') {
+      await carregarImagem(url);
+      no.asset = url;
+      no.encaixe = 'conter';
+      no.origem = { como: `biblioteca: ${item.nome} (${item.sub})` };
+      registrar(`Trocar imagem de ${no.id} por ${item.nome}`);
+      await agendarRedesenho();
+      return;
+    }
+    await colocarImagem(url, item.nome, `biblioteca: ${item.nome} (${item.sub})`);
+  } catch (e) {
+    aviso(`Não consegui colocar ${item.nome}: ${e.message}`, true);
+  }
 }
 
 function duplicar() {
@@ -1325,6 +1350,7 @@ async function iniciar() {
   ligarAtalhos();
   atualizarBotaoGuias();
   desenharAbas();
+  iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice: new URL(window.BIBLIOTECA ?? '../biblioteca/indice.json', location.href), aoEscolher: colocarDaBiblioteca });
 
   const resposta = await fetch(urlCena);
   if (!resposta.ok) throw new Error(`não achei a cena ${urlCena.pathname} (${resposta.status})`);

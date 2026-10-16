@@ -3,3 +3,5 @@ saida/
 *.tmp.*
 .DS_Store
 saidas/
+biblioteca/
+.tmp-*

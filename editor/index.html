@@ -144,6 +144,22 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   .amostras { display: flex; flex-wrap: wrap; gap: 4px; }
   .amostra { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(127,127,127,0.6); padding: 0; cursor: pointer; }
   .amostra:hover { outline: 2px solid currentColor; outline-offset: 1px; }
+  #biblioteca summary { cursor: pointer; }
+  .bib-total { font: 400 11px var(--f-dado); color: var(--tinta-suave); margin-left: 6px; }
+  .bib-corpo { display: grid; gap: 8px; margin-top: 8px; }
+  .bib-abas { display: flex; flex-wrap: wrap; gap: 4px; }
+  .bib-abas button { padding: 3px 8px; font-size: 12px; border-radius: 999px; }
+  .bib-abas button small { color: var(--tinta-suave); font: 400 10px var(--f-dado); }
+  .bib-abas button[aria-selected="true"] { background: var(--ouro-fundo); border-color: var(--ouro); font-weight: 500; }
+  .bib-filtros { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+  .bib-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: 340px; overflow: auto; padding: 2px; align-content: start; }
+  .bib-item { display: grid; grid-template-rows: 78px auto; gap: 3px; padding: 4px; border-radius: 6px; text-align: center; align-items: start; background: var(--mesa-2); }
+  .bib-item img { width: 100%; height: 78px; object-fit: contain; border-radius: 4px; background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 10px 10px; }
+  .bib-item span { font-size: 10.5px; line-height: 1.25; color: var(--tinta-suave); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bib-item:hover { border-color: var(--ouro); }
+  .bib-mais { justify-self: center; }
+  .bib-mais[hidden] { display: none; }
+  .bib-dica { margin: 0; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -198,6 +214,12 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   <div class="trabalho">
     <div id="area"><canvas id="tela"></canvas></div>
     <div class="lateral">
+      <section id="biblioteca" aria-label="Biblioteca">
+        <details open>
+          <summary><h2 style="display:inline">Biblioteca</h2> <span class="bib-total"></span></summary>
+          <div class="bib-corpo"><p class="dica">carregando…</p></div>
+        </details>
+      </section>
       <section aria-label="Camadas">
         <h2>Camadas</h2>
         <div class="camada-topo">
