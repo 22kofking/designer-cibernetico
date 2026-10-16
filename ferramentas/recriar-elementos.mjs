@@ -11,8 +11,13 @@ import { exportarPsd } from '../src/node/psd.js';
 
 const [banner, tipo, saida, arqPos = '/mnt/project-files/arara/elementos-v2/grupos/posicoes.json', raiz = '/mnt/project-files/arara'] = process.argv.slice(2);
 if (!banner || !tipo || !saida) { console.error('uso: recriar-elementos.mjs <banner> <envelopes|moedas|moedas_furadas> <saida>'); process.exit(2); }
-const ORIG = { 'promo-envelopes': 'promo/promo-1790980998-e0741671.webp', 'promo-deposito': 'promo/promo-1790980959-9639e055.webp' };
-const itens = JSON.parse(await readFile(arqPos, 'utf8')).filter((i) => i.banner === banner && (tipo === 'envelopes' ? /^env/.test(i.id) : /^moeda/.test(i.id)));
+const ORIG = {
+  'home-3': 'home/banner3.png.webp', 'promo-envelopes': 'promo/promo-1790980998-e0741671.webp', 'promo-deposito': 'promo/promo-1790980959-9639e055.webp',
+  'promo-rebate': 'promo/promo-1790981102-82ba1db4.webp', 'promo-telegram': 'promo/promo-1790981127-d91c22ef.webp', 'promo-instagram': 'promo/promo-1790981412-117f1d73.webp',
+};
+const FILTRO = { envelopes: /^env/, moedas: /^moeda/, moedas_furadas: /^moeda/, coracoes: /^coracao/, icones_instagram: /^icone_instagram/, icone_telegram: /^icone_telegram/, celulares: /^celular$/ };
+if (!FILTRO[tipo]) { console.error(`tipo desconhecido: ${tipo}`); process.exit(2); }
+const itens = JSON.parse(await readFile(arqPos, 'utf8')).filter((i) => i.banner === banner && FILTRO[tipo].test(i.id));
 const { W, H } = itens[0];
 const rad = (g) => (g * Math.PI) / 180;
 
@@ -30,7 +35,7 @@ async function paletaDe(arquivos) {
 }
 const arqs = itens.map((i) => path.join(raiz, 'elementos-v2/entrega', i.arquivo));
 const paleta = await paletaDe(arqs);
-const cores = rampaDaPaleta(paleta, tipo === 'envelopes' ? VERMELHO : OURO);
+const cores = /moeda/.test(tipo) ? rampaDaPaleta(paleta, OURO) : tipo === 'envelopes' ? rampaDaPaleta(paleta, VERMELHO) : OURO;
 
 function desfoqueDe(nit, tamanho) { return nit >= 150 ? 0 : nit >= 40 ? tamanho * 0.008 : nit >= 15 ? tamanho * 0.018 : tamanho * 0.03; }
 
@@ -59,6 +64,71 @@ function envelopeBanner({ cx, cy, largura: w, altura: h, rotacao = 0, cores, our
   return { defs, corpo };
 }
 
+// Coração de notificação (balão vermelho com coração branco), ícone do Instagram, ícone do Telegram e celular.
+// Todos desenhados no próprio quadro (centro 0,0), w x h; o giro vem de fora.
+function coracao(w, h) {
+  const id = `c${++seq}`, bh = h * 0.84, r = Math.min(w, bh) * 0.24;
+  const cor = `<linearGradient id="${id}" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#ff6a6f"/><stop offset="0.55" stop-color="#f2243b"/><stop offset="1" stop-color="#b3081f"/></linearGradient>`;
+  const x0 = -w / 2, y0 = -h / 2;
+  const balao = `<rect x="${x0}" y="${y0}" width="${w}" height="${bh}" rx="${r}" fill="url(#${id})"/>`
+    + `<path d="M${x0 + w * 0.2},${y0 + bh - 1} L${x0 + w * 0.22},${y0 + h} L${x0 + w * 0.45},${y0 + bh - 1} Z" fill="#c4102a"/>`;
+  const s0 = Math.min(w, bh) * 0.32, cx = 0, cy = y0 + bh * 0.52;
+  const heart = `<path d="M${cx},${cy + s0 * 0.9} C${cx - s0 * 1.6},${cy - s0 * 0.1} ${cx - s0 * 0.9},${cy - s0 * 1.3} ${cx},${cy - s0 * 0.45} C${cx + s0 * 0.9},${cy - s0 * 1.3} ${cx + s0 * 1.6},${cy - s0 * 0.1} ${cx},${cy + s0 * 0.9} Z" fill="#fff"/>`;
+  const brilho = `<rect x="${x0 + w * 0.08}" y="${y0 + bh * 0.06}" width="${w * 0.84}" height="${bh * 0.32}" rx="${r * 0.8}" fill="#fff" opacity="0.18"/>`;
+  return { defs: [cor], corpo: `<rect x="${x0}" y="${y0 + h * 0.05}" width="${w}" height="${bh}" rx="${r}" fill="#7a0614"/>` + balao + brilho + heart };
+}
+function iconeInstagram(w, h, sombra = true) {
+  const id = `i${++seq}`, r = w * 0.27, x0 = -w / 2, y0 = -h / 2;
+  const g = `<radialGradient id="${id}" cx="0.15" cy="1.05" r="1.35"><stop offset="0" stop-color="#feda75"/><stop offset="0.25" stop-color="#fa7e1e"/><stop offset="0.5" stop-color="#d62976"/><stop offset="0.78" stop-color="#962fbf"/><stop offset="1" stop-color="#4f5bd5"/></radialGradient>`;
+  const q = Math.min(w, h), t = q * 0.075; // o glifo é sempre quadrado, mesmo na tela do celular
+  const glifo = `<rect x="${-q * 0.29}" y="${-q * 0.29}" width="${q * 0.58}" height="${q * 0.58}" rx="${q * 0.17}" fill="none" stroke="#fff" stroke-width="${t}"/>`
+    + `<circle cx="0" cy="0" r="${q * 0.14}" fill="none" stroke="#fff" stroke-width="${t}"/><circle cx="${q * 0.165}" cy="${-q * 0.165}" r="${q * 0.04}" fill="#fff"/>`;
+  return { defs: [g], corpo: (sombra ? `<rect x="${x0}" y="${y0 + h * 0.06}" width="${w}" height="${h}" rx="${r}" fill="#5a1c6e"/>` : '')
+    + `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="${r}" fill="url(#${id})"/>`
+    + `<rect x="${x0 + w * 0.06}" y="${y0 + h * 0.04}" width="${w * 0.88}" height="${h * 0.36}" rx="${r * 0.8}" fill="#fff" opacity="0.16"/>` + glifo };
+}
+function aviaoTelegram(r) {
+  return `<path d="M${-r * 0.52},${-r * 0.02} L${r * 0.48},${-r * 0.42} L${r * 0.3},${r * 0.45} L${r * 0.02},${r * 0.22} L${-r * 0.12},${r * 0.38} L${-r * 0.1},${r * 0.12} L${r * 0.3},${-r * 0.25} L${-r * 0.2},${r * 0.08} Z" fill="#fff"/>`;
+}
+function iconeTelegram(w) {
+  const id = `t${++seq}`, r = w / 2;
+  const g = `<radialGradient id="${id}" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#6fd6ff"/><stop offset="0.6" stop-color="#2aa3e0"/><stop offset="1" stop-color="#136fa8"/></radialGradient>`;
+  return { defs: [g], corpo: `<circle cx="0" cy="${r * 0.05}" r="${r}" fill="#0c4a73"/><circle cx="0" cy="0" r="${r}" fill="url(#${id})"/>`
+    + `<circle cx="0" cy="0" r="${r * 0.96}" fill="none" stroke="#e8f8ff" stroke-width="${r * 0.05}" opacity="0.7"/>`
+    + `<ellipse cx="${-r * 0.2}" cy="${-r * 0.5}" rx="${r * 0.55}" ry="${r * 0.25}" fill="#fff" opacity="0.2"/>` + aviaoTelegram(r) };
+}
+function celular(w, h, tela) {
+  const id = `f${++seq}`, x0 = -w / 2, y0 = -h / 2, r = w * 0.16, m = w * 0.05;
+  const aro = `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${OURO.brilho}"/><stop offset="0.4" stop-color="${OURO.claro}"/><stop offset="1" stop-color="${OURO.escuro}"/></linearGradient>`;
+  const defs = [aro];
+  let conteudo;
+  const sw = w - 2 * m, sh = h - 2 * m;
+  if (tela === 'telegram') {
+    const tg = iconeTelegram(sw * 0.62); defs.push(...tg.defs);
+    conteudo = `<rect x="${x0 + m}" y="${y0 + m}" width="${sw}" height="${sh}" rx="${r * 0.7}" fill="#0f2235"/>` + tg.corpo;
+  } else {
+    const ig = iconeInstagram(sw, sh, false); defs.push(...ig.defs);
+    conteudo = ig.corpo.replace(/rx="[0-9.]+"/, `rx="${(r * 0.7).toFixed(1)}"`);
+  }
+  return { defs, corpo: `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="${r}" fill="url(#${id})"/>`
+    + `<rect x="${x0 + m * 0.45}" y="${y0 + m * 0.45}" width="${w - m * 0.9}" height="${h - m * 0.9}" rx="${r * 0.85}" fill="#0b0b0b"/>`
+    + conteudo + `<rect x="${-w * 0.16}" y="${y0 + m * 1.2}" width="${w * 0.32}" height="${m * 1.3}" rx="${m * 0.65}" fill="#0b0b0b"/>` };
+}
+
+// Retângulo de proporção kx:ky (lado maior = L) girado phi, encaixado na caixa do item;
+// se o item encosta na borda do banner, só os lados livres valem para medir e posicionar.
+function encaixeRetangulo(i, kx, ky, phi) {
+  const ct = Math.abs(Math.cos(rad(phi))), st = Math.abs(Math.sin(rad(phi)));
+  const cortaX = i.x <= 1 || i.x + i.w >= W - 1, cortaY = i.y <= 1 || i.y + i.h >= H - 1;
+  const Lw = i.w / (kx * ct + ky * st), Lh = i.h / (kx * st + ky * ct);
+  const L = !cortaX && !cortaY ? (Lw + Lh) / 2 : cortaX && !cortaY ? Lh : cortaY && !cortaX ? Lw : Math.max(Lw, Lh);
+  const bw = L * (kx * ct + ky * st), bh = L * (kx * st + ky * ct);
+  const cx = i.x <= 1 && cortaX ? i.x + i.w - bw / 2 : i.x + i.w >= W - 1 && cortaX ? i.x + bw / 2 : i.x + i.w / 2;
+  const cy = i.y <= 1 && cortaY ? i.y + i.h - bh / 2 : i.y + i.h >= H - 1 && cortaY ? i.y + bh / 2 : i.y + i.h / 2;
+  return { cx, cy, w: L * kx, h: L * ky };
+}
+const noLugar = (e, cx, cy, phi) => ({ defs: e.defs, corpo: `<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(${phi.toFixed(1)})">${e.corpo}</g>` });
+
 function desenhar(i) {
   const th = rad(i.angulo), c = Math.abs(Math.cos(th)), s = Math.abs(Math.sin(th));
   const cortaX = i.x <= 1 || i.x + i.w >= W - 1, cortaY = i.y <= 1 || i.y + i.h >= H - 1;
@@ -66,7 +136,13 @@ function desenhar(i) {
   const alongado = i.alongamento > 1.25;
   const ang = alongado ? i.angulo : 0;
   let defs, corpo, tamanho;
-  if (tipo === 'envelopes') {
+  if (['coracoes', 'icones_instagram', 'icone_telegram', 'celulares'].includes(tipo)) {
+    const phi = i.giro_retangulo ?? 0;
+    const [kx, ky] = tipo === 'celulares' ? [0.5, 1] : tipo === 'coracoes' ? [1, 0.95] : [1, 1];
+    const q = encaixeRetangulo(i, kx, ky, phi);
+    const e = tipo === 'coracoes' ? coracao(q.w, q.h) : tipo === 'icones_instagram' ? iconeInstagram(q.w, q.h) : tipo === 'icone_telegram' ? iconeTelegram(q.w) : celular(q.w, q.h, banner === 'promo-telegram' ? 'telegram' : 'instagram');
+    ({ defs, corpo } = noLugar(e, q.cx, q.cy, phi)); tamanho = Math.max(q.w, q.h);
+  } else if (tipo === 'envelopes') {
     const k = 0.62; // lado curto / lado longo
     const t = alongado ? th : 0, ct = Math.abs(Math.cos(t)), st = Math.abs(Math.sin(t));
     const Lw = i.w / (ct + k * st), Lh = i.h / (st + k * ct);
@@ -88,7 +164,7 @@ function desenhar(i) {
     const m = moeda({ cx, cy, raio: a, inclinacao: incl, rotacao: ang, furo: tipo === 'moedas_furadas', simbolo: 'coroa', cores, desfoque: desfoqueDe(i.nitidez, a * 2) });
     defs = m.defs; corpo = m.corpo; tamanho = a * 2;
   }
-  const desf = tipo === 'envelopes' ? desfoqueDe(i.nitidez, tamanho) : 0;
+  const desf = /moeda/.test(tipo) ? 0 : desfoqueDe(i.nitidez, tamanho);
   const filtro = desf > 0 ? `<filter id="fx${i.id}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${desf.toFixed(2)}"/></filter>` : '';
   const f = filtro ? `<g filter="url(#fx${i.id})">${corpo}</g>` : corpo;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs.join('')}${filtro}</defs>${f}</svg>`;
@@ -107,6 +183,7 @@ const cena = { versao: '0.1', nome: `${banner}-${tipo}-recriados`, formato: { la
 await writeFile(path.join(saida, 'cena.json'), JSON.stringify(cena, null, 1));
 console.log(await exportarPsd(cena, saida, path.join(saida, `${banner}-${tipo}-recriados.psd`)));
 
+if (ORIG[banner]) {
 // pré-visualização sobre fundo liso, ao lado dos recortes originais no mesmo lugar e do banner de referência
 const fundo = { create: { width: W, height: H, channels: 3, background: '#16301f' } };
 const sobre = async (camadas) => sharp(fundo).composite(camadas).png().toBuffer();
@@ -121,4 +198,5 @@ const cmp = await sharp({ create: { width: W, height: (H + 34) * 3, channels: 3,
 ]).jpeg({ quality: 90 }).toBuffer();
 await writeFile(path.join(saida, 'comparacao.jpg'), cmp);
 await writeFile(path.join(saida, 'recriado-sobre-fundo-liso.png'), recriado);
+}
 console.log('paleta', paleta.join(' '), `${nos.length} camadas`);
