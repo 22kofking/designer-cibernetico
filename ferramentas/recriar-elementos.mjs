@@ -9,8 +9,12 @@ import { moeda, rampaDaPaleta, OURO, VERMELHO } from '../src/oficinas/procedural
 import { renderizar } from '../src/node/render-node.js';
 import { exportarPsd } from '../src/node/psd.js';
 
+// --mestre=<arquivo.png>: só grava o mestre do tipo (de frente, nítido, 512x512, sem fundo) e sai; é a entrada do aprimoramento por IA.
+// --mestres=<pasta>: se houver <pasta>/<tipo>.png (mestre aprimorado), ele substitui o desenho vetorial em cada posição.
+const opcoes = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
+process.argv = process.argv.filter((a) => !a.startsWith('--'));
 const [banner, tipo, saida, arqPos = '/mnt/project-files/arara/elementos-v2/grupos/posicoes.json', raiz = '/mnt/project-files/arara'] = process.argv.slice(2);
-if (!banner || !tipo || !saida) { console.error('uso: recriar-elementos.mjs <banner> <envelopes|moedas|moedas_furadas> <saida>'); process.exit(2); }
+if (!banner || !tipo || (!saida && !opcoes.mestre)) { console.error('uso: recriar-elementos.mjs <banner> <envelopes|moedas|moedas_furadas> <saida>'); process.exit(2); }
 const ORIG = {
   'home-3': 'home/banner3.png.webp', 'promo-envelopes': 'promo/promo-1790980998-e0741671.webp', 'promo-deposito': 'promo/promo-1790980959-9639e055.webp',
   'promo-rebate': 'promo/promo-1790981102-82ba1db4.webp', 'promo-telegram': 'promo/promo-1790981127-d91c22ef.webp', 'promo-instagram': 'promo/promo-1790981412-117f1d73.webp',
@@ -20,6 +24,10 @@ if (!FILTRO[tipo]) { console.error(`tipo desconhecido: ${tipo}`); process.exit(2
 const itens = JSON.parse(await readFile(arqPos, 'utf8')).filter((i) => i.banner === banner && FILTRO[tipo].test(i.id));
 const { W, H } = itens[0];
 const rad = (g) => (g * Math.PI) / 180;
+const arqMestre = opcoes.mestres && path.join(opcoes.mestres, `${tipo}.png`);
+// o mestre é cortado rente ao objeto, para ocupar o retângulo inteiro do vetor
+const mestreIA = arqMestre && await readFile(arqMestre).then(async (b) => `data:image/png;base64,${(await sharp(b).trim({ threshold: 1 }).png().toBuffer()).toString('base64')}`, () => null);
+if (opcoes.mestres) console.log(mestreIA ? `mestre aprimorado: ${arqMestre}` : `sem mestre em ${arqMestre}: fica o vetor`);
 
 // paleta do tipo, tirada dos pixels dos recortes (como a oficina faz com a referência)
 async function paletaDe(arquivos) {
@@ -135,13 +143,13 @@ function desenhar(i) {
   const bx = i.x + i.w / 2, by = i.y + i.h / 2;
   const alongado = i.alongamento > 1.25;
   const ang = alongado ? i.angulo : 0;
-  let defs, corpo, tamanho;
+  let defs, corpo, tamanho, geo;
   if (['coracoes', 'icones_instagram', 'icone_telegram', 'celulares'].includes(tipo)) {
     const phi = i.giro_retangulo ?? 0;
     const [kx, ky] = tipo === 'celulares' ? [0.5, 1] : tipo === 'coracoes' ? [1, 0.95] : [1, 1];
     const q = encaixeRetangulo(i, kx, ky, phi);
     const e = tipo === 'coracoes' ? coracao(q.w, q.h) : tipo === 'icones_instagram' ? iconeInstagram(q.w, q.h) : tipo === 'icone_telegram' ? iconeTelegram(q.w) : celular(q.w, q.h, banner === 'promo-telegram' ? 'telegram' : 'instagram');
-    ({ defs, corpo } = noLugar(e, q.cx, q.cy, phi)); tamanho = Math.max(q.w, q.h);
+    ({ defs, corpo } = noLugar(e, q.cx, q.cy, phi)); tamanho = Math.max(q.w, q.h); geo = { ...q, phi };
   } else if (tipo === 'envelopes') {
     const k = 0.62; // lado curto / lado longo
     const t = alongado ? th : 0, ct = Math.abs(Math.cos(t)), st = Math.abs(Math.sin(t));
@@ -151,7 +159,7 @@ function desenhar(i) {
     const cx = i.x <= 1 && cortaX ? i.x + i.w - bwv / 2 : i.x + i.w >= W - 1 && cortaX ? i.x + bwv / 2 : bx;
     const cy = i.y <= 1 && cortaY ? i.y + i.h - bhv / 2 : i.y + i.h >= H - 1 && cortaY ? i.y + bhv / 2 : by;
     const e = envelopeBanner({ cx, cy, largura: L, altura: L * k, rotacao: ang, cores, ouro: OURO });
-    defs = e.defs; corpo = e.corpo; tamanho = L;
+    defs = e.defs; corpo = e.corpo; tamanho = L; geo = { cx, cy, w: L, h: L * k, phi: ang };
   } else {
     const rho = alongado ? Math.min(1, 1 / i.alongamento) : 1;
     const incl = Math.min(0.8, 1 - rho);
@@ -162,12 +170,26 @@ function desenhar(i) {
     const cx = i.x <= 1 && cortaX ? i.x + i.w - ex : i.x + i.w >= W - 1 && cortaX ? i.x + ex : bx;
     const cy = i.y <= 1 && cortaY ? i.y + i.h - ey : i.y + i.h >= H - 1 && cortaY ? i.y + ey : by;
     const m = moeda({ cx, cy, raio: a, inclinacao: incl, rotacao: ang, furo: tipo === 'moedas_furadas', simbolo: 'coroa', cores, desfoque: desfoqueDe(i.nitidez, a * 2) });
-    defs = m.defs; corpo = m.corpo; tamanho = a * 2;
+    defs = m.defs; corpo = m.corpo; tamanho = a * 2; geo = { cx, cy, w: a * 2, h: a * 2 * (1 - incl), phi: ang };
   }
-  const desf = /moeda/.test(tipo) ? 0 : desfoqueDe(i.nitidez, tamanho);
+  if (mestreIA) {
+    // o mestre aprimorado ocupa o mesmo retângulo do vetor (moeda inclinada = mestre achatado na vertical)
+    defs = []; corpo = `<g transform="translate(${geo.cx.toFixed(1)},${geo.cy.toFixed(1)}) rotate(${geo.phi.toFixed(1)})"><image href="${mestreIA}" x="${(-geo.w / 2).toFixed(1)}" y="${(-geo.h / 2).toFixed(1)}" width="${geo.w.toFixed(1)}" height="${geo.h.toFixed(1)}" preserveAspectRatio="none"/></g>`;
+  }
+  const desf = /moeda/.test(tipo) && !mestreIA ? 0 : desfoqueDe(i.nitidez, tamanho);
   const filtro = desf > 0 ? `<filter id="fx${i.id}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${desf.toFixed(2)}"/></filter>` : '';
   const f = filtro ? `<g filter="url(#fx${i.id})">${corpo}</g>` : corpo;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs.join('')}${filtro}</defs>${f}</svg>`;
+}
+
+if (opcoes.mestre) {
+  const M = 512, c = M / 2;
+  const e = /moeda/.test(tipo) ? moeda({ cx: c, cy: c, raio: 220, inclinacao: 0, furo: tipo === 'moedas_furadas', simbolo: 'coroa', cores })
+    : tipo === 'envelopes' ? envelopeBanner({ cx: c, cy: c, largura: 460, altura: 460 * 0.62, cores, ouro: OURO })
+    : noLugar(tipo === 'coracoes' ? coracao(440, 418) : tipo === 'icones_instagram' ? iconeInstagram(420, 420) : tipo === 'icone_telegram' ? iconeTelegram(430)
+      : celular(230, 460, banner === 'promo-telegram' ? 'telegram' : 'instagram'), c, c, 0);
+  await writeFile(opcoes.mestre, await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${M}" height="${M}"><defs>${e.defs.join('')}</defs>${e.corpo}</svg>`)).png().toBuffer());
+  console.log(opcoes.mestre); process.exit(0);
 }
 
 await mkdir(path.join(saida, 'camadas'), { recursive: true });
