@@ -14,7 +14,8 @@
     "desconstruir": "node src/node/desconstruir-cli.js",
     "mascote": "node src/node/mascote-cli.js",
     "peca": "node src/node/peca-cli.js",
-    "procedural": "node src/node/procedural-cli.js"
+    "procedural": "node src/node/procedural-cli.js",
+    "recorte-itens": "node src/node/recorte-itens-cli.js"
   },
   "keywords": [],
   "author": "",
