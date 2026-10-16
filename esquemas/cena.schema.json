@@ -66,6 +66,31 @@
         "visivel": { "type": "boolean" },
         "bloqueado": { "type": "boolean" },
         "espelhar": { "type": "boolean" },
+        "espelhar_v": { "type": "boolean" },
+        "mistura": {
+          "description": "Modo de mistura da camada (nomes do Photoshop em português).",
+          "enum": ["normal", "multiplicar", "tela", "sobrepor", "escurecer", "clarear", "subexpor_cor", "superexpor_cor", "luz_direta", "luz_suave", "diferenca", "exclusao", "matiz", "saturacao", "cor", "luminosidade"]
+        },
+        "ajustes": {
+          "description": "Ajustes de imagem aplicados ao nó.",
+          "type": "object",
+          "properties": {
+            "brilho": { "type": "number", "minimum": -1, "maximum": 1 },
+            "contraste": { "type": "number", "minimum": -1, "maximum": 1 },
+            "saturacao": { "type": "number", "minimum": -1, "maximum": 1 },
+            "matiz": { "type": "number", "minimum": -180, "maximum": 180 },
+            "desfoque": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "efeitos": {
+          "description": "Estilos de camada, em pixels do formato. Contorno só vale para texto e retângulo.",
+          "type": "object",
+          "properties": {
+            "sombra": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "opacidade": { "type": "number" }, "desfoque": { "type": "number" }, "dx": { "type": "number" }, "dy": { "type": "number" } } },
+            "brilho": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "opacidade": { "type": "number" }, "tamanho": { "type": "number" } } },
+            "contorno": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "largura": { "type": "number" } } }
+          }
+        },
         "origem": { "$ref": "#/definitions/origem" },
         "asset": { "type": "string" },
         "direcao": { "enum": ["horizontal", "vertical"] },

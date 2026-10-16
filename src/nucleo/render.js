@@ -58,6 +58,26 @@ function corComOpacidade(cor, opacidade = 1) {
   return `rgba(${r},${g},${b},${opacidade})`;
 }
 
+// Modos de mistura da camada, com os nomes do Photoshop/PhotoCraft em português.
+export const MISTURAS = {
+  normal: 'source-over',
+  multiplicar: 'multiply',
+  tela: 'screen',
+  sobrepor: 'overlay',
+  escurecer: 'darken',
+  clarear: 'lighten',
+  subexpor_cor: 'color-burn',
+  superexpor_cor: 'color-dodge',
+  luz_direta: 'hard-light',
+  luz_suave: 'soft-light',
+  diferenca: 'difference',
+  exclusao: 'exclusion',
+  matiz: 'hue',
+  saturacao: 'saturation',
+  cor: 'color',
+  luminosidade: 'luminosity',
+};
+
 function aplicarComum(obj, no) {
   obj.set({
     angle: no.rotacao ?? 0,
@@ -66,14 +86,65 @@ function aplicarComum(obj, no) {
     selectable: no.bloqueado !== true,
     evented: no.bloqueado !== true,
     flipX: no.espelhar === true,
+    flipY: no.espelhar_v === true,
+    globalCompositeOperation: MISTURAS[no.mistura] ?? 'source-over',
   });
   obj.idNo = no.id;
   obj.papel = no.papel;
   return obj;
 }
 
+// Estilos de camada (efeitos), em pixels do formato:
+//   efeitos.sombra   { cor, opacidade, desfoque, dx, dy }
+//   efeitos.brilho   { cor, opacidade, tamanho }       brilho externo
+//   efeitos.contorno { cor, largura }                  só texto e retângulo
+// O Fabric tem uma sombra por objeto: o brilho vira uma cópia logo atrás,
+// marcada com efeitoDe para o editor não a tratar como camada.
+function sombraFabric(fabric, s, desfoque, dx = 0, dy = 0) {
+  return new fabric.Shadow({ color: corComOpacidade(s.cor ?? '#000000', s.opacidade ?? 0.6), blur: desfoque, offsetX: dx, offsetY: dy });
+}
+
+function aplicarEfeitos(fabric, objs, no, copiar) {
+  const ef = no.efeitos ?? {};
+  const saida = [];
+  for (const obj of objs) {
+    if (ef.brilho && (ef.brilho.opacidade ?? 1) > 0 && copiar) {
+      const atras = copiar(obj);
+      atras.set({ shadow: sombraFabric(fabric, { cor: '#ffffff', opacidade: 0.8, ...ef.brilho }, ef.brilho.tamanho ?? 20), selectable: false, evented: false });
+      atras.idNo = obj.idNo;
+      atras.efeitoDe = no.id;
+      if (obj.indiceLinha !== undefined) atras.indiceLinha = obj.indiceLinha;
+      saida.push(atras);
+    }
+    if (ef.sombra && (ef.sombra.opacidade ?? 0.6) > 0) {
+      obj.set('shadow', sombraFabric(fabric, ef.sombra, ef.sombra.desfoque ?? 10, ef.sombra.dx ?? 0, ef.sombra.dy ?? 0));
+    }
+    if (ef.contorno && (ef.contorno.largura ?? 0) > 0 && (no.tipo === 'bloco_texto' || no.tipo === 'retangulo')) {
+      obj.set({ stroke: ef.contorno.cor ?? '#000000', strokeWidth: ef.contorno.largura, paintFirst: 'stroke', strokeLineJoin: 'round', strokeUniform: true });
+    }
+    saida.push(obj);
+  }
+  return saida;
+}
+
+// Ajustes de imagem (como as camadas de ajuste, mas no próprio nó):
+//   ajustes { brilho -1..1, contraste -1..1, saturacao -1..1, matiz -180..180 (graus), desfoque 0..1 }
+function aplicarAjustes(fabric, img, ajustes) {
+  if (!ajustes) return;
+  const f = [];
+  if (ajustes.brilho) f.push(new fabric.filters.Brightness({ brightness: ajustes.brilho }));
+  if (ajustes.contraste) f.push(new fabric.filters.Contrast({ contrast: ajustes.contraste }));
+  if (ajustes.saturacao) f.push(new fabric.filters.Saturation({ saturation: ajustes.saturacao }));
+  if (ajustes.matiz) f.push(new fabric.filters.HueRotation({ rotation: ajustes.matiz / 180 }));
+  if (ajustes.desfoque) f.push(new fabric.filters.Blur({ blur: ajustes.desfoque }));
+  if (!f.length) return;
+  img.filters = f;
+  img.applyFilters();
+}
+
 async function objetoImagem(fabric, no, caixa, carregarImagem) {
   const img = await carregarImagem(no.asset);
+  aplicarAjustes(fabric, img, no.ajustes);
   const pos = encaixar(img.width, img.height, caixa, no.encaixe ?? 'conter', no.ancora ?? 'centro');
   img.set({ left: pos.x, top: pos.y, scaleX: pos.escalaX, scaleY: pos.escalaY, originX: 'left', originY: 'top' });
   if (no.rotacao) {
@@ -81,8 +152,20 @@ async function objetoImagem(fabric, no, caixa, carregarImagem) {
     const c = img.getCenterPoint();
     img.set({ originX: 'center', originY: 'center', left: c.x, top: c.y });
   }
-  return [aplicarComum(img, no)];
+  aplicarComum(img, no);
+  return aplicarEfeitos(fabric, [img], no, (o) => {
+    const copia = new fabric.FabricImage(o.getElement(), { filters: o.filters });
+    copia.set({ left: o.left, top: o.top, scaleX: o.scaleX, scaleY: o.scaleY, originX: o.originX, originY: o.originY, angle: o.angle, flipX: o.flipX, flipY: o.flipY, opacity: o.opacity, visible: o.visible });
+    if (o.filters?.length) copia.applyFilters();
+    return copia;
+  });
 }
+
+// Cópia de um retângulo (chapado ou degradê) para o brilho externo.
+const copiarRetangulo = (fabric) => (o) => new fabric.Rect({
+  left: o.left, top: o.top, width: o.width, height: o.height, originX: o.originX, originY: o.originY, fill: o.fill,
+  rx: o.rx, ry: o.ry, angle: o.angle, opacity: o.opacity, visible: o.visible, flipX: o.flipX, flipY: o.flipY, strokeWidth: 0,
+});
 
 function objetoGradiente(fabric, no, caixa) {
   const horizontal = (no.direcao ?? 'horizontal') === 'horizontal';
@@ -95,7 +178,7 @@ function objetoGradiente(fabric, no, caixa) {
     coords: horizontal ? { x1: 0, y1: 0, x2: caixa.w, y2: 0 } : { x1: 0, y1: 0, x2: 0, y2: caixa.h },
     colorStops: no.paradas.map(([offset, cor, opacidade]) => ({ offset, color: corComOpacidade(cor, opacidade ?? 1) })),
   }));
-  return [aplicarComum(rect, no)];
+  return aplicarEfeitos(fabric, [aplicarComum(rect, no)], no, copiarRetangulo(fabric));
 }
 
 function objetoRetangulo(fabric, no, caixa) {
@@ -103,14 +186,14 @@ function objetoRetangulo(fabric, no, caixa) {
     left: caixa.x, top: caixa.y, width: caixa.w, height: caixa.h, originX: 'left', originY: 'top',
     fill: corComOpacidade(no.cor ?? '#000000', no.opacidade_cor ?? 1), rx: no.raio ?? 0, ry: no.raio ?? 0, strokeWidth: 0,
   });
-  return [aplicarComum(rect, no)];
+  return aplicarEfeitos(fabric, [aplicarComum(rect, no)], no, copiarRetangulo(fabric));
 }
 
 function objetosTexto(fabric, no, caixa, medidor, formato) {
   const linhas = encaixarTexto(no, caixa, medidor, formato);
   const base = linhaDeBase(fabric, no.fonte);
   const { altCaixaAlta } = medidor.metricas(no.fonte);
-  return linhas.map((l, i) => {
+  const objs = linhas.map((l, i) => {
     const estilo = no.estilos?.[l.estilo] ?? {};
     const topoObjeto = l.base - base * l.tamanho;
     const t = new fabric.FabricText(l.texto, {
@@ -148,6 +231,13 @@ function objetosTexto(fabric, no, caixa, medidor, formato) {
     t.idNo = no.id;
     t.indiceLinha = i;
     return t;
+  });
+  return aplicarEfeitos(fabric, objs, no, (o) => {
+    const copia = new fabric.FabricText(o.text, {
+      left: o.left, top: o.top, fontSize: o.fontSize, fontFamily: o.fontFamily, fontWeight: o.fontWeight, charSpacing: o.charSpacing,
+      fill: o.fill, originX: 'left', originY: 'top', angle: o.angle, opacity: o.opacity, visible: o.visible, flipX: o.flipX, flipY: o.flipY,
+    });
+    return copia;
   });
 }
 
