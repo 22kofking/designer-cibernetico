@@ -1,0 +1,9 @@
+{"_leia": "Onde fica cada articulação no desenho de origem (pixels de base-frente.png). Marcado uma vez por bicho.",
+ "origem": "/mnt/project-files/mascotes/padrao-folha/capivara/base-frente.png",
+ "tipo": "mamifero",
+ "pontos": {"cabeca_topo":[385,45],"pescoco":[385,265],
+  "ombro_d":[185,335],"cotovelo_d":[130,500],"punho_d":[148,640],"mao_fim_d":[150,710],
+  "ombro_e":[585,335],"cotovelo_e":[640,500],"punho_e":[628,640],"mao_fim_e":[625,710],
+  "quadril_d":[300,640],"joelho_d":[275,820],"tornozelo_d":[262,925],"pe_fim_d":[215,965],
+  "quadril_e":[470,640],"joelho_e":[500,820],"tornozelo_e":[510,925],"pe_fim_e":[565,965]},
+ "medidas": {"cabeca_largura":250,"ombros_largura":490,"cintura_y":610,"cintura_largura":290,"antebraco_largura":80}}

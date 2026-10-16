@@ -1,0 +1,785 @@
+{
+ "_leia": "Pegada em relação ao corpo. Cada pose diz em que zona do corpo cada mão fica, que pegada de mão usa (pegadas.json), como o corpo compensa a carga e a ordem das camadas com o objeto. As zonas são relativas a marcos do esqueleto padrão (C = altura da cabeça, O = meia largura dos ombros, lado = -1 para a mão direita do personagem e +1 para a esquerda), então valem para qualquer bicho. 'angulos_bracos' sai por cinemática inversa no kit da capivara, na mesma convenção de modelo/poses/*.json (graus da imagem, 0 = direita, 90 = baixo). Inclinação em graus: frente_tras + = tronco para trás; lateral + = para a esquerda da imagem (lado d do personagem); com carga num lado, o tronco inclina para o lado oposto.",
+ "zonas": {
+  "acima_cabeca": {
+   "x": "centro + lado*0,35*O",
+   "y": "topo da cabeça - 0,45*C"
+  },
+  "acima_lado": {
+   "x": "ombro + lado*0,6*O",
+   "y": "topo da cabeça - 0,2*C"
+  },
+  "rosto": {
+   "x": "centro + lado*0,55*O",
+   "y": "topo + 0,65*C"
+  },
+  "mostrar": {
+   "x": "centro + lado*1,05*O",
+   "y": "pescoço - 0,25*C (ao lado do rosto)"
+  },
+  "peito_frente": {
+   "x": "centro + lado*0,3*O",
+   "y": "pescoço + 0,6*C"
+  },
+  "cintura_frente": {
+   "x": "centro + lado*0,35*O",
+   "y": "cintura"
+  },
+  "mao_no_quadril": {
+   "x": "centro + lado*0,75*O",
+   "y": "cintura"
+  },
+  "lateral_baixo": {
+   "x": "ombro + lado*0,25*O",
+   "y": "quadril + 0,35*C"
+  },
+  "lateral_aberto": {
+   "x": "ombro + lado*1,2*O",
+   "y": "ombro + 0,9*C"
+  },
+  "selfie": {
+   "x": "ombro + lado*1,1*O",
+   "y": "topo + 0,2*C"
+  },
+  "ombro": {
+   "x": "ombro - lado*0,1*O",
+   "y": "ombro - 0,15*C"
+  },
+  "frente_estendido": {
+   "x": "centro + lado*0,55*O",
+   "y": "ombro + 0,25*C",
+   "profundidade": "braço vem na direção de quem vê (encurtado)"
+  },
+  "alca_peito": {
+   "x": "ombro - lado*0,3*O (para dentro)",
+   "y": "ombro + 0,9*C"
+  },
+  "solto": {
+   "x": "como no kit",
+   "y": "como no kit"
+  }
+ },
+ "peso": {
+  "leve": {
+   "distancia_do_corpo": "livre",
+   "inclinacao": "a da pose",
+   "base": "a da pose",
+   "joelhos": "a da pose"
+  },
+  "medio": {
+   "distancia_do_corpo": "perto",
+   "inclinacao": "+5 graus contra a carga",
+   "base": "normal",
+   "joelhos": "levemente dobrados"
+  },
+  "pesado": {
+   "distancia_do_corpo": "colado",
+   "inclinacao": "+10 a 15 graus contra a carga",
+   "base": "larga",
+   "joelhos": "dobrados",
+   "extra": "ombro da carga desce; o outro braço abre para contrapeso; o objeto encosta no tronco"
+  }
+ },
+ "poses": {
+  "mostrar": {
+   "nome": "Mostrar para quem vê",
+   "uso": "apresenta um objeto pequeno ao lado do rosto ou do peito",
+   "objetos": [
+    "cartão VIP",
+    "envelope",
+    "ingresso",
+    "ficha"
+   ],
+   "mao_d": {
+    "zona": "mostrar",
+    "pegada": "tripe",
+    "pulso": "palma_camera"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "uma mão, frontal leve",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": 4,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "do lado da mão no quadril"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "braço livre",
+    "cabeça",
+    "braço que mostra",
+    "OBJETO",
+    "dedos da frente"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "convite",
+    "VIP",
+    "login"
+   ],
+   "angulos_bracos": {
+    "braco_d": -182.6,
+    "antebraco_d": -39.0,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "celular_mostrar": {
+   "nome": "Mostrar o celular",
+   "uso": "tela virada para quem vê, na altura do peito",
+   "objetos": [
+    "celular",
+    "tablet"
+   ],
+   "mao_d": {
+    "zona": "mostrar",
+    "pegada": "celular",
+    "pulso": "palma_camera"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "uma mão, frontal leve",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": 3,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "braço livre",
+    "cabeça",
+    "braço que segura",
+    "dedos de trás",
+    "OBJETO",
+    "polegar"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "redes",
+    "telegram",
+    "login"
+   ],
+   "angulos_bracos": {
+    "braco_d": -182.6,
+    "antebraco_d": -39.0,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "selfie": {
+   "nome": "Selfie",
+   "uso": "braço esticado para o alto e para o lado; tela para o rosto",
+   "objetos": [
+    "celular"
+   ],
+   "mao_d": {
+    "zona": "selfie",
+    "pegada": "celular",
+    "pulso": "lado_polegar",
+    "obs": "tela para o rosto"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "joinha",
+    "pulso": "lado_polegar"
+   },
+   "carga": "uma mão, lateral leve",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": -6,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "cabeça",
+    "braço livre",
+    "braço do celular",
+    "OBJETO"
+   ],
+   "olhar": "para o celular",
+   "temas": [
+    "redes"
+   ],
+   "angulos_bracos": {
+    "braco_d": -166.3,
+    "antebraco_d": -104.0,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "erguer_uma": {
+   "nome": "Erguer com uma mão",
+   "uso": "vitória: levanta o objeto acima da cabeça",
+   "objetos": [
+    "troféu",
+    "taça",
+    "envelope vermelho",
+    "moeda grande"
+   ],
+   "mao_d": {
+    "zona": "acima_lado",
+    "pegada": "cilindrica",
+    "pulso": "lado_polegar"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "uma mão, acima da cabeça",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": -5,
+    "ombro_da_carga": "sobe",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "cabeça",
+    "braço livre",
+    "braço que ergue",
+    "OBJETO",
+    "dedos da frente"
+   ],
+   "olhar": "câmera ou objeto",
+   "temas": [
+    "envelopes",
+    "rebate",
+    "resgate"
+   ],
+   "angulos_bracos": {
+    "braco_d": -135.0,
+    "antebraco_d": -89.2,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "erguer_duas": {
+   "nome": "Erguer com as duas mãos",
+   "uso": "troféu ou baú acima da cabeça, braços simétricos",
+   "objetos": [
+    "troféu",
+    "baú pequeno",
+    "cinturão"
+   ],
+   "mao_d": {
+    "zona": "acima_cabeca",
+    "pegada": "cilindrica",
+    "pulso": "lado_polegar"
+   },
+   "mao_e": {
+    "zona": "acima_cabeca",
+    "pegada": "cilindrica",
+    "pulso": "lado_polegar"
+   },
+   "carga": "duas mãos, acima da cabeça",
+   "corpo": {
+    "inclinacao_frente_tras": 5,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "normal",
+    "base": "larga",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "medio",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "cabeça",
+    "braços",
+    "OBJETO"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "VIP",
+    "resgate"
+   ],
+   "angulos_bracos": {
+    "braco_d": -75.3,
+    "antebraco_d": -68.8,
+    "braco_e": -104.7,
+    "antebraco_e": -111.2
+   }
+  },
+  "duas_maos_frente": {
+   "nome": "Segurar com as duas mãos",
+   "uso": "objeto redondo na frente do peito, mãos dos dois lados",
+   "objetos": [
+    "orbe",
+    "bola",
+    "moeda gigante",
+    "ficha gigante"
+   ],
+   "mao_d": {
+    "zona": "peito_frente",
+    "pegada": "esferica",
+    "pulso": "palma_camera",
+    "obs": "mãos de lado, palmas para dentro"
+   },
+   "mao_e": {
+    "zona": "peito_frente",
+    "pegada": "esferica",
+    "pulso": "palma_camera"
+   },
+   "carga": "duas mãos, frontal",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "braços",
+    "OBJETO",
+    "dedos da frente"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "telegram (mago)",
+    "depósito"
+   ],
+   "angulos_bracos": {
+    "braco_d": 103.9,
+    "antebraco_d": -30.5,
+    "braco_e": 76.1,
+    "antebraco_e": -149.5
+   }
+  },
+  "abracar": {
+   "nome": "Abraçar a carga",
+   "uso": "objeto grande e pesado colado ao peito, braços por baixo e dos lados",
+   "objetos": [
+    "baú",
+    "saco de moedas",
+    "caixa de presente"
+   ],
+   "mao_d": {
+    "zona": "cintura_frente",
+    "pegada": "aberta",
+    "pulso": "palma_camera",
+    "obs": "palma por baixo do objeto"
+   },
+   "mao_e": {
+    "zona": "cintura_frente",
+    "pegada": "aberta",
+    "pulso": "palma_camera"
+   },
+   "carga": "duas mãos, frontal pesada",
+   "corpo": {
+    "inclinacao_frente_tras": 12,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "os dois descem",
+    "base": "larga",
+    "joelhos": "dobrados",
+    "peso_na_perna": "as duas, calcanhares"
+   },
+   "peso_padrao": "pesado",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "braços de cima",
+    "OBJETO",
+    "antebraços e mãos"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "resgate",
+    "depósito",
+    "rebate"
+   ],
+   "angulos_bracos": {
+    "braco_d": 107.0,
+    "antebraco_d": 31.0,
+    "braco_e": 73.0,
+    "antebraco_e": 149.0
+   }
+  },
+  "carregar_lateral": {
+   "nome": "Carregar ao lado",
+   "uso": "sacola ou baú pela alça, braço esticado ao lado do corpo",
+   "objetos": [
+    "sacola",
+    "baú com alça",
+    "maleta"
+   ],
+   "mao_d": {
+    "zona": "lateral_baixo",
+    "pegada": "gancho",
+    "pulso": "dorso_camera"
+   },
+   "mao_e": {
+    "zona": "lateral_aberto",
+    "pegada": "aberta",
+    "pulso": "palma_camera",
+    "obs": "braço abre para contrapeso"
+   },
+   "carga": "uma mão, lateral",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": -8,
+    "ombro_da_carga": "desce",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "do lado oposto à carga"
+   },
+   "peso_padrao": "medio",
+   "ordem_das_camadas": [
+    "OBJETO (se atrás da perna)",
+    "perna",
+    "tronco",
+    "braço livre",
+    "braço da carga",
+    "OBJETO (se ao lado)"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "turista",
+    "depósito"
+   ],
+   "angulos_bracos": {
+    "braco_d": 101.2,
+    "antebraco_d": 94.4,
+    "braco_e": 79.8,
+    "antebraco_e": 7.3
+   }
+  },
+  "no_ombro": {
+   "nome": "Carga no ombro",
+   "uso": "saco jogado por cima do ombro, mão segura a boca do saco",
+   "objetos": [
+    "saco de dinheiro",
+    "rede",
+    "trouxa"
+   ],
+   "mao_d": {
+    "zona": "ombro",
+    "pegada": "gancho",
+    "pulso": "dorso_camera"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "uma mão, ombro",
+   "corpo": {
+    "inclinacao_frente_tras": -5,
+    "inclinacao_lateral": -4,
+    "ombro_da_carga": "desce",
+    "base": "normal",
+    "joelhos": "levemente dobrados",
+    "peso_na_perna": "do lado da carga"
+   },
+   "peso_padrao": "medio",
+   "ordem_das_camadas": [
+    "perna",
+    "OBJETO (parte de trás)",
+    "tronco",
+    "cabeça",
+    "braço livre",
+    "braço da carga",
+    "OBJETO (boca do saco)"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "pirata",
+    "rua"
+   ],
+   "angulos_bracos": {
+    "braco_d": 102.1,
+    "antebraco_d": -74.5,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "oferecer": {
+   "nome": "Oferecer",
+   "uso": "estende o objeto na direção de quem vê, na palma da mão",
+   "objetos": [
+    "moeda",
+    "presente",
+    "orbe pequeno",
+    "bônus"
+   ],
+   "mao_d": {
+    "zona": "frente_estendido",
+    "pegada": "aberta",
+    "pulso": "palma_camera",
+    "obs": "palma para cima; o braço encurta porque vem para frente"
+   },
+   "mao_e": {
+    "zona": "solto",
+    "pegada": "aberta",
+    "pulso": "palma_camera"
+   },
+   "carga": "uma mão, frontal leve",
+   "corpo": {
+    "inclinacao_frente_tras": -6,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "braço livre",
+    "cabeça",
+    "braço que oferece",
+    "OBJETO"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "convite",
+    "bônus",
+    "depósito"
+   ],
+   "angulos_bracos": {
+    "braco_d": 126.2,
+    "antebraco_d": -23.9,
+    "braco_e": 71.6,
+    "antebraco_e": 94.1
+   }
+  },
+  "cajado": {
+   "nome": "Cajado apoiado",
+   "uso": "haste vertical apoiada no chão, ao lado do corpo",
+   "objetos": [
+    "cajado",
+    "cetro",
+    "bastão",
+    "ankh grande"
+   ],
+   "mao_d": {
+    "zona": "mao_no_quadril",
+    "pegada": "empunha",
+    "pulso": "lado_polegar",
+    "obs": "punho na altura da cintura, haste vai do chão até acima da cabeça"
+   },
+   "mao_e": {
+    "zona": "mostrar",
+    "pegada": "aberta",
+    "pulso": "palma_camera"
+   },
+   "carga": "uma mão, lateral apoiada",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": 4,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "do lado do cajado"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "OBJETO (abaixo da mão)",
+    "perna",
+    "tronco",
+    "cabeça",
+    "braço livre",
+    "braço do cajado",
+    "OBJETO (acima da mão)",
+    "dedos"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "telegram (mago)",
+    "VIP (faraó)"
+   ],
+   "angulos_bracos": {
+    "braco_d": 128.6,
+    "antebraco_d": 41.2,
+    "braco_e": 2.6,
+    "antebraco_e": -141.0
+   }
+  },
+  "moeda_rosto": {
+   "nome": "Examinar perto do rosto",
+   "uso": "segura algo pequeno perto do olho ou da boca",
+   "objetos": [
+    "moeda",
+    "ficha",
+    "joia",
+    "carta"
+   ],
+   "mao_d": {
+    "zona": "rosto",
+    "pegada": "pinca",
+    "pulso": "dorso_camera"
+   },
+   "mao_e": {
+    "zona": "mao_no_quadril",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "uma mão, rosto",
+   "corpo": {
+    "inclinacao_frente_tras": 0,
+    "inclinacao_lateral": 3,
+    "ombro_da_carga": "normal",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "perna",
+    "tronco",
+    "cabeça",
+    "braço livre",
+    "braço do rosto",
+    "OBJETO",
+    "dedos"
+   ],
+   "olhar": "para o objeto",
+   "temas": [
+    "rebate",
+    "VIP"
+   ],
+   "angulos_bracos": {
+    "braco_d": 16.5,
+    "antebraco_d": -111.4,
+    "braco_e": 51.4,
+    "antebraco_e": 138.8
+   }
+  },
+  "lancar": {
+   "nome": "Jogar para o alto",
+   "uso": "mãos abertas no alto, objetos soltos voando",
+   "objetos": [
+    "moedas",
+    "notas",
+    "confete",
+    "fichas"
+   ],
+   "mao_d": {
+    "zona": "acima_lado",
+    "pegada": "aberta",
+    "pulso": "palma_camera"
+   },
+   "mao_e": {
+    "zona": "acima_lado",
+    "pegada": "aberta",
+    "pulso": "palma_camera"
+   },
+   "carga": "duas mãos, sem pegar",
+   "corpo": {
+    "inclinacao_frente_tras": 6,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "normal",
+    "base": "larga",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "leve",
+   "ordem_das_camadas": [
+    "OBJETOS atrás",
+    "perna",
+    "tronco",
+    "cabeça",
+    "braços",
+    "OBJETOS na frente"
+   ],
+   "olhar": "para cima",
+   "temas": [
+    "resgate",
+    "apostas",
+    "rebate"
+   ],
+   "angulos_bracos": {
+    "braco_d": -135.0,
+    "antebraco_d": -89.2,
+    "braco_e": -45.0,
+    "antebraco_e": -90.8
+   }
+  },
+  "nas_costas": {
+   "nome": "Carga nas costas",
+   "uso": "mochila ou baú preso nas costas, mãos nas alças na altura do peito",
+   "objetos": [
+    "mochila",
+    "baú nas costas",
+    "aljava"
+   ],
+   "mao_d": {
+    "zona": "alca_peito",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "mao_e": {
+    "zona": "alca_peito",
+    "pegada": "punho",
+    "pulso": "dorso_camera"
+   },
+   "carga": "costas (a mais estável)",
+   "corpo": {
+    "inclinacao_frente_tras": -6,
+    "inclinacao_lateral": 0,
+    "ombro_da_carga": "os dois puxados para trás",
+    "base": "normal",
+    "joelhos": "retos",
+    "peso_na_perna": "as duas"
+   },
+   "peso_padrao": "medio",
+   "ordem_das_camadas": [
+    "OBJETO",
+    "perna",
+    "tronco",
+    "alças",
+    "braços",
+    "mãos"
+   ],
+   "olhar": "câmera",
+   "temas": [
+    "turista"
+   ],
+   "angulos_bracos": {
+    "braco_d": 139.7,
+    "antebraco_d": 23.9,
+    "braco_e": 40.3,
+    "antebraco_e": 156.1
+   }
+  }
+ },
+ "ligacao_com_as_7_poses": {
+  "frente": "solto",
+  "aponta": "sem objeto (pegada aponta)",
+  "ergue": "erguer_uma",
+  "punho": "sem objeto (pegada punho)",
+  "abertos": "lancar",
+  "segura": "duas_maos_frente",
+  "celular": "celular_mostrar"
+ }
+}

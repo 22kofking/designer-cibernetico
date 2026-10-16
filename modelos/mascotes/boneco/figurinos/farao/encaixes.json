@@ -1,0 +1,103 @@
+{
+ "_leia": "Peças do figurino por encaixe. Pontos e medidas são do manequim; o montador leva cada peça para o bicho pela âncora, pelo comprimento do osso e pela largura indicada.",
+ "figurino": "farao",
+ "pontos": {
+  "cabeca_topo": [
+   385,
+   75
+  ],
+  "pescoco": [
+   385,
+   300
+  ],
+  "cintura": [
+   385,
+   535
+  ],
+  "ombro_d": [
+   255,
+   345
+  ],
+  "cotovelo_d": [
+   240,
+   500
+  ],
+  "mao_fim_d": [
+   240,
+   690
+  ],
+  "ombro_e": [
+   515,
+   345
+  ],
+  "cotovelo_e": [
+   530,
+   500
+  ],
+  "mao_fim_e": [
+   530,
+   690
+  ],
+  "quadril_meio": [
+   385,
+   600
+  ]
+ },
+ "medidas": {
+  "cabeca_largura": 175,
+  "ombros_largura": 330,
+  "cintura_largura": 190,
+  "antebraco_largura": 58
+ },
+ "pecas": {
+  "toucado": {
+   "osso": "cabeca",
+   "ancora": "pescoco",
+   "largura": "cabeca_largura",
+   "camada_acima_de": "cabeca",
+   "png": "pecas/toucado.png"
+  },
+  "barba": {
+   "osso": "cabeca",
+   "ancora": "pescoco",
+   "largura": "cabeca_largura",
+   "camada_acima_de": "cabeca",
+   "png": "pecas/barba.png"
+  },
+  "colar": {
+   "osso": "tronco",
+   "ancora": "pescoco",
+   "largura": "ombros_largura",
+   "camada_acima_de": "tronco",
+   "png": "pecas/colar.png"
+  },
+  "cinto": {
+   "osso": "tronco",
+   "ancora": "cintura",
+   "largura": "cintura_largura",
+   "camada_acima_de": "tronco",
+   "png": "pecas/cinto.png"
+  },
+  "bracelete_d": {
+   "osso": "antebraco_d",
+   "ancora": "cotovelo_d",
+   "largura": "antebraco_largura",
+   "camada_acima_de": "antebraco_d",
+   "png": "pecas/bracelete_d.png"
+  },
+  "bracelete_e": {
+   "osso": "antebraco_e",
+   "ancora": "cotovelo_e",
+   "largura": "antebraco_largura",
+   "camada_acima_de": "antebraco_e",
+   "png": "pecas/bracelete_e.png"
+  },
+  "bracadeira_e": {
+   "osso": "braco_e",
+   "ancora": "ombro_e",
+   "largura": "antebraco_largura",
+   "camada_acima_de": "braco_e",
+   "png": "pecas/bracadeira_e.png"
+  }
+ }
+}

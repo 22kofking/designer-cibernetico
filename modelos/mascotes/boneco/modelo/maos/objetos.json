@@ -1,0 +1,65 @@
+{
+ "_leia": "Ponto de pega de cada objeto do projeto. O objeto não tem esqueleto: só um ponto, um eixo e a pegada que usa.",
+ "objetos": {
+  "envelope": {
+   "pegada": "pinca",
+   "ponto": "canto superior do envelope",
+   "eixo": "lado maior na horizontal"
+  },
+  "moeda": {
+   "pegada": "pinca",
+   "ponto": "borda esquerda e direita",
+   "eixo": "face para a câmera"
+  },
+  "ficha": {
+   "pegada": "pinca",
+   "ponto": "bordas opostas",
+   "eixo": "face para a câmera"
+  },
+  "cartao_vip": {
+   "pegada": "tripe",
+   "ponto": "meio do lado menor",
+   "eixo": "horizontal"
+  },
+  "orbe": {
+   "pegada": "esferica",
+   "ponto": "centro do orbe acima da palma",
+   "eixo": "sem eixo"
+  },
+  "celular": {
+   "pegada": "celular",
+   "ponto": "meio do lado direito (ou esquerdo)",
+   "eixo": "vertical, tela para a câmera"
+  },
+  "taca": {
+   "pegada": "cilindrica",
+   "ponto": "haste",
+   "eixo": "vertical"
+  },
+  "trofeu": {
+   "pegada": "cilindrica",
+   "ponto": "base da haste",
+   "eixo": "vertical"
+  },
+  "bau": {
+   "pegada": "gancho",
+   "ponto": "alça",
+   "eixo": "pende para baixo"
+  },
+  "cajado": {
+   "pegada": "empunha",
+   "ponto": "a um terço da altura",
+   "eixo": "vertical, sai dos dois lados da mão"
+  },
+  "chave": {
+   "pegada": "lateral",
+   "ponto": "corpo da chave",
+   "eixo": "horizontal"
+  },
+  "dedo_aponta": {
+   "pegada": "aponta",
+   "ponto": "ponta do indicador",
+   "eixo": "na direção do alvo"
+  }
+ }
+}
