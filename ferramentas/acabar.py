@@ -66,6 +66,17 @@ def ajustar(no, ours, ref, rodada):
     return a
 
 
+def sombra_de_contato(no, ours, ref, rodada):
+    """Nível 2 do plano: se a referência escurece mais o chão em volta da parte do que a montagem, põe (ou reforça) uma sombra."""
+    co, cr = ours.get('contato'), ref.get('contato')
+    if co is None or cr is None or co - cr < 0.1:
+        return False
+    ef = no.setdefault('efeitos', {})
+    s = ef.setdefault('sombra', {'cor': '#000000', 'opacidade': 0.0, 'desfoque': 14, 'dx': 0, 'dy': 6})
+    s['opacidade'] = round(min(0.85, s['opacidade'] + min(0.5, (co - cr) * 0.6)), 2)
+    return True
+
+
 def delta_pixel(a_png, b_png, largura=128):
     def ler(p):
         im = Image.open(p).convert('RGB')
@@ -151,12 +162,18 @@ def main():
     atual = ficha
     for r in range(rodadas):
         guardado = copy.deepcopy(cena)
-        for chave, no in regioes:
+        for chave, no in ([] if opcoes.get('sem-tom') else regioes):
             ajustar(no, atual['regioes'].get(chave), ref['regioes'].get(chave), r)
-        for chave, no in ([] if opcoes.get('so-fundo') else partes.items()):
+        for chave, no in ([] if opcoes.get('so-fundo') or opcoes.get('sem-tom') else partes.items()):
             ajustar(no, atual['partes'].get(chave), ref['partes'].get(chave), r)
         json.dump(cena, open(destino_cena, 'w'), ensure_ascii=False, indent=1)
         png = renderizar(destino_cena, os.path.join(saida, f'saida{r + 1}'))
+        if opcoes.get('contato'):
+            for chave, no in partes.items():
+                if atual['partes'].get(chave) and ref['partes'].get(chave):
+                    sombra_de_contato(no, atual['partes'][chave], ref['partes'][chave], r)
+            json.dump(cena, open(destino_cena, 'w'), ensure_ascii=False, indent=1)
+            png = renderizar(destino_cena, os.path.join(saida, f'saida{r + 1}'))
         if refpng:
             nova = pal(png)
             print(f'rodada {r + 1}: ΔE de paleta {melhor:.2f} -> {nova:.2f}')
