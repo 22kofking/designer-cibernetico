@@ -144,6 +144,15 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   .amostras { display: flex; flex-wrap: wrap; gap: 4px; }
   .amostra { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(127,127,127,0.6); padding: 0; cursor: pointer; }
   .amostra:hover { outline: 2px solid currentColor; outline-offset: 1px; }
+  #composicoes summary { cursor: pointer; }
+  .comp-corpo { display: grid; gap: 8px; margin-top: 8px; }
+  #comp-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+  #comp-lista li { display: grid; grid-template-columns: minmax(0, 1fr) 28px 28px; gap: 4px; align-items: stretch; }
+  .comp-colocar { display: grid; gap: 1px; text-align: left; padding: 5px 8px; border-radius: 6px; background: var(--mesa-2); }
+  .comp-colocar:hover { border-color: var(--ouro); }
+  .comp-colocar small { color: var(--tinta-suave); font: 400 10.5px var(--f-dado); }
+  #comp-lista li button:not(.comp-colocar) { padding: 2px; justify-content: center; }
+  #camadas li.marcada { outline: 1px solid var(--ouro); }
   #biblioteca summary { cursor: pointer; }
   .bib-total { font: 400 11px var(--f-dado); color: var(--tinta-suave); margin-left: 6px; }
   .bib-corpo { display: grid; gap: 8px; margin-top: 8px; }
@@ -218,6 +227,21 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
         <details open>
           <summary><h2 style="display:inline">Biblioteca</h2> <span class="bib-total"></span></summary>
           <div class="bib-corpo"><p class="dica">carregando…</p></div>
+        </details>
+      </section>
+      <section id="composicoes" aria-label="Composições">
+        <details open>
+          <summary><h2 style="display:inline">Composições</h2></summary>
+          <div class="comp-corpo">
+            <p class="dica">Junte camadas numa disposição e reutilize. Escolha várias camadas com Ctrl ou Shift + clique na lista.</p>
+            <p class="dica">Escolha agora: <b id="comp-escolha"></b></p>
+            <div class="botoes">
+              <button type="button" id="comp-salvar" class="pequeno" disabled>Salvar como composição</button>
+              <button type="button" id="comp-agrupar" class="pequeno" title="As camadas escolhidas passam a mover e escalar juntas">Agrupar em seção</button>
+              <label class="botao pequeno">Importar<input id="comp-importar" type="file" accept=".json,application/json" multiple></label>
+            </div>
+            <ul id="comp-lista"></ul>
+          </div>
         </details>
       </section>
       <section aria-label="Camadas">

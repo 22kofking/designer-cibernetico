@@ -10,6 +10,7 @@ import { criarMedidor, montarCena, MISTURAS } from '../src/nucleo/render.js';
 import { abrirPsd, exportarPsd } from './psd-navegador.js';
 import { salvar } from './salvar.js';
 import { iniciarBiblioteca } from './biblioteca.js';
+import { capturar, instanciar, reposicionar, caixaDoConjunto, larguraInicial, validarComposicao } from './composicoes.js';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const params = new URLSearchParams(location.search);
@@ -27,6 +28,7 @@ let guias = [];
 const cacheImagens = new Map();
 const medidor = criarMedidor(document.createElement('canvas').getContext('2d'));
 const historico = { passos: [], i: -1 };
+const marcadas = new Set(); // camadas escolhidas com Ctrl/Shift+clique, para salvar como composição
 
 const NOMES_MISTURA = {
   normal: 'Normal', multiplicar: 'Multiplicar', tela: 'Tela', sobrepor: 'Sobrepor', escurecer: 'Escurecer', clarear: 'Clarear',
@@ -413,16 +415,28 @@ function desenharCamadas() {
   // de cima para baixo, como no Photoshop
   [...cena.nos].reverse().forEach((no) => {
     const li = document.createElement('li');
-    li.className = no.id === selecionado ? 'ativo' : '';
+    li.className = `${no.id === selecionado ? 'ativo' : ''} ${marcadas.has(no.id) ? 'marcada' : ''}`.trim();
     li.draggable = true;
     li.dataset.id = no.id;
     li.innerHTML = `
       <button class="olho" type="button" title="Mostrar ou esconder" aria-pressed="${no.visivel !== false}">${no.visivel === false ? '○' : '●'}</button>
       <span class="icone" aria-hidden="true">${ICONES[no.tipo] ?? '?'}</span>
       <span class="nome" title="Duplo clique para renomear">${esc(no.id)}</span>
-      <span class="papel">${esc(no.mistura && no.mistura !== 'normal' ? NOMES_MISTURA[no.mistura] : no.papel ?? no.tipo)}${(no.opacidade ?? 1) < 1 ? ` · ${Math.round(no.opacidade * 100)}%` : ''}</span>
+      <span class="papel">${no.secao ? `❒ ${esc(no.secao)} · ` : ''}${esc(no.mistura && no.mistura !== 'normal' ? NOMES_MISTURA[no.mistura] : no.papel ?? no.tipo)}${(no.opacidade ?? 1) < 1 ? ` · ${Math.round(no.opacidade * 100)}%` : ''}</span>
       <button class="cadeado" type="button" title="Travar ou destravar" aria-pressed="${no.bloqueado === true}">${no.bloqueado ? '🔒' : '🔓'}</button>`;
-    li.onclick = (e) => { if (!e.target.closest('button')) selecionarPorId(no.id, true); };
+    li.onclick = (e) => {
+      if (e.target.closest('button')) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        // escolhe várias camadas (a que já estava selecionada entra junto)
+        if (!marcadas.size && selecionado) marcadas.add(selecionado);
+        if (marcadas.has(no.id)) marcadas.delete(no.id); else marcadas.add(no.id);
+        desenharCamadas();
+        desenharComposicoes();
+        return;
+      }
+      marcadas.clear();
+      selecionarPorId(no.id, true);
+    };
     li.querySelector('.nome').ondblclick = () => renomear(li, no);
     li.querySelector('.olho').onclick = () => { no.visivel = no.visivel === false; registrar(`${no.visivel ? 'Mostrar' : 'Esconder'} ${no.id}`); agendarRedesenho(); };
     li.querySelector('.cadeado').onclick = () => { no.bloqueado = !no.bloqueado; registrar(`${no.bloqueado ? 'Travar' : 'Destravar'} ${no.id}`); agendarRedesenho(); };
@@ -444,6 +458,7 @@ function desenharCamadas() {
   $('#camada-mistura').value = no?.mistura ?? 'normal';
   $('#camada-opacidade').value = Math.round((no?.opacidade ?? 1) * 100);
   ['#duplicar', '#excluir'].forEach((s) => { $(s).disabled = !no; });
+  desenharComposicoes();
 }
 
 function renomear(li, no) {
@@ -540,7 +555,7 @@ async function colocarImagem(asset, nome, origem) {
   const w = img.width * f;
   const h = img.height * f;
   inserirNo({
-    id: idNovo(nome.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase() || 'imagem'),
+    id: idNovo(nome.replace(/\.[^.]+$/, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase() || 'imagem'),
     tipo: 'imagem', papel: 'elemento', asset, encaixe: 'conter',
     caixa: caixaEmFracoes({ x: (W - w) / 2, y: (H - h) / 2, w, h }, cena.formato),
     origem: { como: origem },
@@ -594,6 +609,159 @@ function excluir() {
   registrar(`Excluir ${no.id}`);
   agendarRedesenho();
   mostrarPropriedades();
+}
+
+
+// ---------- composições e seções ----------
+// Composição: camadas numa disposição espacial, guardadas para reutilizar (neste navegador e em arquivo .json).
+// Seção: as camadas que vieram de uma composição ficam marcadas (campo "secao") e se movem e escalam juntas.
+
+const CHAVE_COMPOSICOES = 'mesa:composicoes:v1';
+
+function lerComposicoes() {
+  try { return JSON.parse(ler(CHAVE_COMPOSICOES) ?? '[]').filter((c) => !validarComposicao(c)); } catch { return []; }
+}
+
+function gravarComposicoes(lista) {
+  if (!guardar(CHAVE_COMPOSICOES, JSON.stringify(lista))) aviso('Não consegui guardar neste navegador (cheio?). Use Exportar para ficar com o arquivo.', true);
+}
+
+function nosParaComposicao() {
+  const ids = marcadas.size ? [...marcadas] : selecionado ? [selecionado] : [];
+  return cena.nos.filter((n) => ids.includes(n.id) && n.caixa); // na ordem de empilhamento da peça
+}
+
+function secaoDe(no) {
+  return cena.nos.filter((n) => n.secao && n.secao === no.secao);
+}
+
+function desenharComposicoes() {
+  const raiz = $('#composicoes');
+  if (!raiz) return;
+  const lista = lerComposicoes();
+  const escolhidas = nosParaComposicao();
+  $('#comp-salvar').disabled = !escolhidas.length;
+  $('#comp-escolha').textContent = marcadas.size > 1 ? `${marcadas.size} camadas escolhidas` : selecionado ? `camada ${selecionado}` : 'nenhuma camada escolhida';
+  $('#comp-lista').innerHTML = lista.map((c, i) => `
+    <li data-i="${i}">
+      <button type="button" class="comp-colocar" title="Colocar na peça">
+        <strong>${esc(c.nome)}</strong><small>${c.nos.length} camada${c.nos.length > 1 ? 's' : ''}</small>
+      </button>
+      <button type="button" class="comp-baixar" title="Exportar arquivo .json">⭳</button>
+      <button type="button" class="comp-apagar" title="Apagar">✕</button>
+    </li>`).join('') || '<li class="dica">Nenhuma composição ainda.</li>';
+  $('#comp-lista').querySelectorAll('li[data-i]').forEach((li) => {
+    const c = lista[Number(li.dataset.i)];
+    li.querySelector('.comp-colocar').onclick = () => colocarComposicao(c);
+    li.querySelector('.comp-baixar').onclick = () => baixarComposicao(c);
+    li.querySelector('.comp-apagar').onclick = () => {
+      if (!confirm(`Apagar a composição "${c.nome}"?`)) return;
+      gravarComposicoes(lerComposicoes().filter((x) => x.id !== c.id));
+      desenharComposicoes();
+    };
+  });
+}
+
+function salvarComposicao(nos, nomeSugerido) {
+  if (!nos.length) return;
+  const nome = (prompt('Nome da composição:', nomeSugerido ?? '') ?? '').trim();
+  if (!nome) return;
+  let comp;
+  try { comp = capturar(nos, cena.formato, nome); } catch (e) { aviso(e.message, true); return; }
+  const lista = lerComposicoes();
+  const i = lista.findIndex((c) => c.id === comp.id);
+  if (i >= 0 && !confirm(`Já existe "${lista[i].nome}". Substituir?`)) return;
+  if (i >= 0) lista[i] = comp; else lista.push(comp);
+  gravarComposicoes(lista);
+  aviso(`Composição "${nome}" guardada (${comp.nos.length} camadas)`);
+  desenharComposicoes();
+}
+
+async function colocarComposicao(comp) {
+  const f = cena.formato;
+  const largura = larguraInicial(comp, f);
+  const altura = largura / comp.aspecto;
+  const secaoId = idNovoSecao(comp.id);
+  const novos = instanciar(comp, f, { x: (f.largura - largura) / 2, y: (f.altura - altura) / 2, largura }, idNovo, secaoId);
+  // idNovo olha só a cena; os ids novos já foram conferidos um a um dentro do conjunto
+  const ocupados = idsDaCena();
+  for (const n of novos) if (ocupados.has(n.id)) n.id = idNovo(`${n.id}-sec`);
+  try {
+    for (const n of novos) if (n.tipo === 'imagem' && n.asset) await carregarImagem(n.asset);
+  } catch (e) { aviso(`Uma imagem da composição não abriu: ${e.message}`, true); return; }
+  const lista = selecionado ? listaDoNo(selecionado) : cena.nos;
+  const i = selecionado ? lista.findIndex((n) => n.id === selecionado) : lista.length - 1;
+  lista.splice(i + 1, 0, ...novos);
+  selecionado = novos[novos.length - 1].id;
+  marcadas.clear();
+  novos.forEach((n) => marcadas.add(n.id));
+  registrar(`Colocar composição ${comp.nome}`);
+  await agendarRedesenho();
+  selecionarPorId(selecionado, true);
+}
+
+function idNovoSecao(base) {
+  const usadas = new Set(cena.nos.map((n) => n.secao).filter(Boolean));
+  let id = base;
+  for (let k = 2; usadas.has(id); k++) id = `${base}-${k}`;
+  return id;
+}
+
+function baixarComposicao(comp) {
+  const blob = new Blob([JSON.stringify(comp, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${comp.id}.composicao.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+async function importarComposicoes(arquivos) {
+  let n = 0;
+  for (const arq of arquivos) {
+    try {
+      const lido = JSON.parse(await lerArquivo(arq, 'texto'));
+      for (const comp of Array.isArray(lido) ? lido : [lido]) {
+        const erro = validarComposicao(comp);
+        if (erro) { aviso(`${arq.name}: ${erro}`, true); continue; }
+        const lista = lerComposicoes().filter((c) => c.id !== comp.id);
+        gravarComposicoes([...lista, comp]);
+        n++;
+      }
+    } catch (e) { aviso(`${arq.name}: ${e.message}`, true); }
+  }
+  if (n) aviso(`${n} composição(ões) importada(s)`);
+  desenharComposicoes();
+}
+
+function painelSecao(no) {
+  const caixa = caixaDoConjunto(secaoDe(no), cena.formato);
+  const px = caixa ?? { x: 0, y: 0, w: 0, h: 0 };
+  return secao(`Seção ❒ ${esc(no.secao)}`, `
+    <p class="dica">${secaoDe(no).length} camadas movem e escalam juntas.</p>
+    <div class="grade2">${campoNumero('X', arred(px.x, 0), { id: 's-x' })}${campoNumero('Y', arred(px.y, 0), { id: 's-y' })}${campoNumero('L', arred(px.w, 0), { id: 's-w', min: 1 })}${campoNumero('A', arred(px.h, 0), { id: 's-h', min: 1 })}</div>
+    <div class="botoes">
+      <button type="button" id="secao-escolher">Escolher a seção</button>
+      <button type="button" id="secao-salvar">Salvar como composição</button>
+      <button type="button" id="secao-soltar">Desfazer a seção</button>
+    </div>`, true, 'secao');
+}
+
+function ligarSecao(painel, no) {
+  const nos = () => secaoDe(no);
+  const proporcional = (k, v) => {
+    const c = caixaDoConjunto(nos(), cena.formato);
+    if (!c) return;
+    const destino = { ...c, [k]: v };
+    // largura e altura mudam juntas, na proporção do conjunto
+    if (k === 'w') destino.h = c.h * (v / c.w);
+    if (k === 'h') destino.w = c.w * (v / c.h);
+    reposicionar(nos(), cena.formato, destino);
+  };
+  for (const k of ['x', 'y', 'w', 'h']) ligar(painel, no, `s-${k}`, (v) => proporcional(k, k === 'w' || k === 'h' ? Math.max(1, v) : v), `Seção ${no.secao}`);
+  $('#secao-escolher').onclick = () => { marcadas.clear(); nos().forEach((n) => marcadas.add(n.id)); desenharCamadas(); aviso(`${marcadas.size} camadas escolhidas`); };
+  $('#secao-salvar').onclick = () => salvarComposicao(nos(), no.secao);
+  $('#secao-soltar').onclick = () => { nos().forEach((n) => { delete n.secao; }); registrar(`Desfazer seção ${no.secao}`); agendarRedesenho(); mostrarPropriedades(); };
 }
 
 // ---------- propriedades ----------
@@ -715,6 +883,7 @@ function mostrarPropriedades() {
       <div class="botoes"><button type="button" id="zerar-ajustes">Zerar ajustes</button></div>`, false, 'ajustes'));
   }
   if (no.tipo !== 'grupo') partes.push(secao('Estilos de camada', painelEfeitos(no), false, 'efeitos'));
+  if (no.secao) partes.push(painelSecao(no));
 
   painel.innerHTML = partes.join('');
   painel.querySelectorAll('details.secao').forEach((d) => { d.ontoggle = () => guardar(`mesa:secao:${d.dataset.chave}`, d.open ? '1' : '0'); });
@@ -764,6 +933,7 @@ function mostrarPropriedades() {
     $('#zerar-ajustes').onclick = () => { delete no.ajustes; registrar(`Zerar ajustes de ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
   }
   if (no.tipo !== 'grupo') ligarEfeitos(painel, no);
+  if (no.secao) ligarSecao(painel, no);
 }
 
 function ligarPainelPeca(painel) {
@@ -1124,6 +1294,7 @@ async function abrir(json, base, { rascunho = true } = {}) {
   cena = json;
   baseAssets = base;
   selecionado = null;
+  marcadas.clear();
   historico.passos = [];
   historico.i = -1;
   const salvo = rascunho ? ler(chaveRascunho()) : null;
@@ -1324,6 +1495,17 @@ async function iniciar() {
   $('#novo-retangulo').onclick = () => inserirNo(NOVOS.retangulo(), 'Novo retângulo');
   $('#novo-gradiente').onclick = () => inserirNo(NOVOS.gradiente(), 'Novo gradiente');
   $('#nova-imagem').onchange = (e) => { if (e.target.files[0]) novaImagem(e.target.files[0]); e.target.value = ''; };
+  $('#comp-salvar').onclick = () => salvarComposicao(nosParaComposicao(), '');
+  $('#comp-agrupar').onclick = () => {
+    const nos = nosParaComposicao();
+    if (nos.length < 2) { aviso('Escolha 2 ou mais camadas (Ctrl ou Shift + clique na lista)', true); return; }
+    const id = idNovoSecao('secao');
+    nos.forEach((n) => { n.secao = id; });
+    registrar(`Agrupar em seção ${id}`);
+    agendarRedesenho();
+    mostrarPropriedades();
+  };
+  $('#comp-importar').onchange = (e) => { importarComposicoes([...e.target.files]); e.target.value = ''; };
   $('#duplicar').onclick = duplicar;
   $('#excluir').onclick = excluir;
   $('#desfazer').onclick = desfazer;
