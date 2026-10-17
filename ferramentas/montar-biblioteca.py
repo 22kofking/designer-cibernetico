@@ -5,7 +5,7 @@ Uso: python3 ferramentas/montar-biblioteca.py [saida=biblioteca] [raiz=/mnt/proj
 A biblioteca fica FORA do git (tem recortes das nossas marcas e referências): a Mesa a lê de
 biblioteca/indice.json, ao lado da página (ou de window.BIBLIOTECA). Cada item do índice:
   { id, categoria, sub, nome, arquivo, w, h, fonte }
-Imagens em /var/tmp/bib-src/sf (fundo tirado pelo BiRefNet) entram nos mascotes de IA.
+Imagens em mascotes/biblioteca-fontes (fundo tirado pelo BiRefNet) entram nos mascotes de IA.
 """
 import glob, json, os, re, shutil, sys
 from PIL import Image
@@ -73,7 +73,7 @@ FOLHA = {'arara-rei-convite': 'Arara rei · convite', 'arara-rei-deposito': 'Ara
 for f in sorted(glob.glob(p('arara/folha/*.webp'))):
     n = os.path.splitext(os.path.basename(f))[0]
     adicionar('mascotes', 'Arara (rei e turista)', FOLHA.get(n, n), f, 'folha de figurinos da arara', n)
-for f in sorted(glob.glob('/var/tmp/bib-src/sf/capivara-*-f60.png')):
+for f in sorted(glob.glob(p('mascotes/biblioteca-fontes/capivara-*-f60.png'))):
     _, fig, pose, _f = os.path.basename(f)[:-4].split('-')
     adicionar('mascotes', 'Capivara (IA, tratada)', f'Capivara {FIGS[fig]} · {POSES[pose]}', f, 'Z-Image + PhotoCraft, fundo tirado', f'capivara-ia-{fig}-{pose}')
 for d in sorted(glob.glob(p('mascotes/boneco/pecas/*/'))):
