@@ -66,6 +66,41 @@
         "visivel": { "type": "boolean" },
         "bloqueado": { "type": "boolean" },
         "espelhar": { "type": "boolean" },
+        "espelhar_v": { "type": "boolean" },
+        "mistura": {
+          "description": "Modo de mistura da camada (nomes do Photoshop em português).",
+          "enum": ["normal", "multiplicar", "tela", "sobrepor", "escurecer", "clarear", "subexpor_cor", "superexpor_cor", "luz_direta", "luz_suave", "diferenca", "exclusao", "matiz", "saturacao", "cor", "luminosidade"]
+        },
+        "ajustes": {
+          "description": "Ajustes de imagem aplicados ao nó.",
+          "type": "object",
+          "properties": {
+            "brilho": { "type": "number", "minimum": -1, "maximum": 1 },
+            "contraste": { "type": "number", "minimum": -1, "maximum": 1 },
+            "saturacao": { "type": "number", "minimum": -1, "maximum": 1 },
+            "matiz": { "type": "number", "minimum": -180, "maximum": 180 },
+            "tom": {
+              "description": "Tinge a imagem com uma cor (mistura 'tint' com intensidade).",
+              "type": "object",
+              "properties": {
+                "cor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+                "intensidade": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "required": ["cor"]
+            },
+            "desfoque": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "efeitos": {
+          "description": "Estilos de camada, em pixels do formato. Contorno só vale para texto e retângulo.",
+          "type": "object",
+          "properties": {
+            "sombra": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "opacidade": { "type": "number" }, "desfoque": { "type": "number" }, "dx": { "type": "number" }, "dy": { "type": "number" } } },
+            "brilho": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "opacidade": { "type": "number" }, "tamanho": { "type": "number" } } },
+            "contorno": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "largura": { "type": "number" } } },
+            "relevo": { "type": "object", "properties": { "cor": { "$ref": "#/definitions/cor" }, "profundidade": { "type": "number" }, "angulo": { "type": "number" } } }
+          }
+        },
         "origem": { "$ref": "#/definitions/origem" },
         "asset": { "type": "string" },
         "direcao": { "enum": ["horizontal", "vertical"] },
@@ -88,14 +123,25 @@
           "type": "array",
           "items": {
             "type": "object", "required": ["texto"],
-            "properties": { "texto": { "type": "string" }, "estilo": { "type": "string" }, "peso": { "type": "number", "exclusiveMinimum": 0 } }
+            "properties": {
+              "texto": { "type": "string" }, "estilo": { "type": "string" }, "peso": { "type": "number", "exclusiveMinimum": 0 },
+              "espacamento": { "type": "number", "description": "Espaço entre letras só desta linha (em)." },
+              "trechos": {
+                "description": "Pedaços da linha com estilo e tamanho próprios; o texto da linha é a soma deles.",
+                "type": "array",
+                "items": {
+                  "type": "object", "required": ["texto"],
+                  "properties": { "texto": { "type": "string" }, "estilo": { "type": "string" }, "escala": { "type": "number", "exclusiveMinimum": 0 }, "caixa_alta": { "type": "boolean" } }
+                }
+              }
+            }
           }
         },
         "estilos": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "properties": { "cor": { "$ref": "#/definitions/cor" }, "rampa": { "type": "array" } }
+            "properties": { "cor": { "$ref": "#/definitions/cor" }, "rampa": { "type": "array" }, "relevo": { "$ref": "#/definitions/cor" } }
           }
         },
         "sombra": { "type": "object" },

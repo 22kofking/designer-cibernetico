@@ -23,6 +23,17 @@ exportador desenha a mesma cena sem tela. O esquema completo está em `esquemas/
 Campos comuns: `id`, `papel` (fundo, texto, mascote, elemento, logo, efeito), `rotacao`, `opacidade`, `visivel`,
 `bloqueado`, `espelhar` e `origem`.
 
+Campos de camada, como no PhotoCraft (todos opcionais):
+
+| Campo | O que faz |
+|---|---|
+| `mistura` | modo de mistura: normal, multiplicar, tela, sobrepor, escurecer, clarear, subexpor_cor, superexpor_cor, luz_direta, luz_suave, diferenca, exclusao, matiz, saturacao, cor, luminosidade. Vira o modo da camada no PSD |
+| `espelhar_v` | espelha na vertical |
+| `ajustes` (imagem) | `brilho`, `contraste`, `saturacao` (-1 a 1), `matiz` (graus), `desfoque` (0 a 1) |
+| `efeitos` | estilos de camada em pixels da peça: `sombra {cor, opacidade, desfoque, dx, dy}`, `brilho {cor, opacidade, tamanho}` (brilho externo), `contorno {cor, largura}` (texto e retângulo) |
+
+`asset` e `fontes[].arquivo` aceitam `data:` (imagem colocada ou fonte subida na Mesa, camadas vindas de um PSD).
+
 ## Origem e licença
 
 `origem` diz de onde o material veio e é o elo com o banco de referências:

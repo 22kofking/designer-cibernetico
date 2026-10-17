@@ -88,6 +88,9 @@ export function validarCena(cena) {
     if (no.tipo === 'bloco_texto') {
       for (const l of no.linhas ?? []) {
         if (l.estilo && !no.estilos?.[l.estilo]) erros.push(`${onde}: estilo "${l.estilo}" não definido`);
+        for (const t of l.trechos ?? []) {
+          if (t.estilo && !no.estilos?.[t.estilo]) erros.push(`${onde}: estilo "${t.estilo}" não definido`);
+        }
       }
     }
   });

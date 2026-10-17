@@ -9,7 +9,8 @@ referências com busca por parecidos, ver [docs/banco.md](docs/banco.md)) **3** 
 [docs/oficinas.md](docs/oficinas.md)) e **4** (desconstrução alimentando o banco, consulta por parte e molde de cena, ver
 [docs/desconstrucao.md](docs/desconstrucao.md)), **5** (personagem travado e mascote em partes, ver [docs/mascote.md](docs/mascote.md)) e **6**
 (equipe de agentes: diretor, especialistas, crítico e bibliotecário, ver [docs/agentes.md](docs/agentes.md)). Elementos
-geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md).
+geométricos também saem desenhados por código, ver [docs/procedural.md](docs/procedural.md). Fundo, mascote e objeto
+podem nascer separados pelo gateway e toda peça sai também em PSD com camadas, ver [docs/componentes.md](docs/componentes.md).
 
 ## O que já funciona
 
@@ -24,7 +25,7 @@ geométricos também saem desenhados por código, ver [docs/procedural.md](docs/
 | Desconstrução → banco → molde | `src/desconstrucao/`, [docs/desconstrucao.md](docs/desconstrucao.md) | lê o grafo de uma referência, guarda cada parte no banco, consulta o banco parte por parte e monta um molde de cena com o layout dela e o nosso material |
 | Mascote | `src/mascote/`, `personagens/`, [docs/mascote.md](docs/mascote.md) | ficha do personagem (prompt, figurinos, temas, folha), conferência "parece o personagem e não é infantil", separação em partes por pontos (SlimSAM em CPU) com QA do recorte e remendo, fundo tirado com BiRefNet, troca de parte na cena |
 | Agentes | `src/agentes/`, `marcas/`, [docs/agentes.md](docs/agentes.md) | diretor reparte as partes com opções, especialistas trocam só a sua parte, crítico mede cada parte contra a referência (ΔE2000 < 10 e regras da ficha) e devolve só a que errou, bibliotecário guarda a peça aprovada |
-| Mesa de Cena | `editor/` | editor no navegador: camadas, arrastar, escalar, girar, editar o texto, salvar a cena e exportar PNG |
+| Mesa de Cena | `editor/` | editor no navegador no estilo do PhotoCraft: camadas com mistura e opacidade, estilos de camada (sombra, brilho externo, contorno), ajustes de imagem, histórico, guias magnéticas, zoom, atalhos, abas por peça, PNG/WebP/JPG e PSD de ida e volta |
 
 ## Como usar
 
@@ -33,7 +34,7 @@ npm install
 npm test                                               # testes do núcleo e do renderizador
 npm run validar -- exemplos/capivara362-home-vip/cena.json
 npm run render  -- exemplos/capivara362-home-vip/cena.json --saida saida/
-npm run editor                                         # abre em http://localhost:5173/editor/
+npm run editor                                         # abre em http://localhost:5173/editor/index.html
 npm run banco -- buscar --texto "gold coin" --prancha moedas.png
 npm run oficina -- elemento --nome moedas --texto "stack of gold coins" \
   --paleta "#f0b03a,#e5682d,#aa251c,#fef60a" --contorno "#120804:8"   # precisa do vectorcraft-cli (VECTORCRAFT_CLI)

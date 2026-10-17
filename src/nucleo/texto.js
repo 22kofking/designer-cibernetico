@@ -30,18 +30,32 @@ export function encaixarTexto(no, caixa, medidor, formato) {
   const cfg = { ...PADRAO_BLOCO, ...no };
   const fonte = cfg.fonte;
   const { altCaixaAlta } = medidor.metricas(fonte);
-  const linhas = cfg.linhas.map((l) => ({
-    ...l,
-    peso: l.peso ?? 1,
-    texto: prepararTexto(l.texto, cfg.caixa_alta),
-  }));
+  // Uma linha pode ter trechos com estilos diferentes ("DE ATÉ" branco e "2%" dourado):
+  // o texto da linha é a soma dos trechos. Cada linha pode ter o próprio espaçamento.
+  const linhas = cfg.linhas.map((l) => {
+    // trecho.escala aumenta só aquele pedaço (o "2%" maior que o "DE ATÉ"), na mesma linha de base;
+    // trecho.caixa_alta = false deixa o pedaço como foi escrito (o "e" de "14H 18H e 22H").
+    const trechos = l.trechos?.length
+      ? l.trechos.map((t) => ({ ...t, escala: t.escala ?? 1, texto: prepararTexto(t.texto, t.caixa_alta ?? cfg.caixa_alta) }))
+      : null;
+    return {
+      ...l,
+      peso: l.peso ?? 1,
+      espacamento: l.espacamento ?? cfg.espacamento,
+      trechos,
+      texto: trechos ? trechos.map((t) => t.texto).join('') : prepararTexto(l.texto, cfg.caixa_alta),
+    };
+  });
 
   // Largura de cada linha com corpo 1 (é linear no corpo).
-  const unidade = linhas.map((l) => medidor.largura(l.texto, fonte, 100, cfg.espacamento) / 100);
+  const larguraTrechos = (l, tam) => l.trechos.reduce((soma, t) => soma + medidor.largura(t.texto, fonte, tam * t.escala, l.espacamento), 0);
+  const unidade = linhas.map((l) => (l.trechos ? larguraTrechos(l, 100) : medidor.largura(l.texto, fonte, 100, l.espacamento)) / 100);
+  // a altura da linha segue o maior trecho
+  linhas.forEach((l) => { l.alturaRel = l.trechos ? Math.max(...l.trechos.map((t) => t.escala)) : 1; });
   const larguraPorFator = Math.max(...linhas.map((l, i) => l.peso * unidade[i]));
   let alturaPorFator = 0;
   linhas.forEach((l, i) => {
-    alturaPorFator += l.peso * altCaixaAlta;
+    alturaPorFator += l.peso * l.alturaRel * altCaixaAlta;
     if (i > 0) alturaPorFator += cfg.vao * Math.min(l.peso, linhas[i - 1].peso);
   });
 
@@ -53,7 +67,7 @@ export function encaixarTexto(no, caixa, medidor, formato) {
 
   const filhos = linhas.map((l, i) => ({
     w: l.peso * unidade[i] * fator,
-    h: l.peso * altCaixaAlta * fator,
+    h: l.peso * l.alturaRel * altCaixaAlta * fator,
     margemAntes: i > 0 ? cfg.vao * Math.min(l.peso, linhas[i - 1].peso) * fator : 0,
   }));
   const caixas = distribuir(caixa, filhos, {
@@ -65,6 +79,12 @@ export function encaixarTexto(no, caixa, medidor, formato) {
   return linhas.map((l, i) => ({
     texto: l.texto,
     estilo: l.estilo,
+    espacamento: l.espacamento,
+    // deslocamento de cada trecho a partir do começo da linha, com a fonte real
+    trechos: l.trechos?.map((t, k) => ({
+      ...t,
+      dx: k ? larguraTrechos({ ...l, trechos: l.trechos.slice(0, k) }, l.peso * fator) : 0,
+    })) ?? null,
     tamanho: l.peso * fator,
     x: caixas[i].x,
     topo: caixas[i].y,              // topo das maiúsculas

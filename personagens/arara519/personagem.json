@@ -1,0 +1,76 @@
+{
+  "nome": "arara519",
+  "marca": "ARARA519",
+  "descricao": "Arara-vermelha 3D de jogo mobile, tirada dos banners da ARARA519 (pasta Arara do Drive, decomposta em 15/10/2026): penas vermelhas, asas amarelas e azuis que fazem de braços, olho grande e bico aberto rindo. Dois figurinos nos banners: rei da selva (coroa de penas e esmeraldas) e turista (chapéu de palha, óculos escuros e camisa havaiana).",
+  "prompt": "Glossy 3D mobile casino game mascot render, vivid saturated colors, warm golden rim light, confident and charismatic adult character, not a baby, not chibi, not a plush toy. Close waist-up portrait cropped at the waist, filling the frame, no legs, no feet, no floor, no pedestal, no shadow. An anthropomorphic scarlet macaw with adult proportions, a sleek head, bright red feathers, big yellow and blue wings used as arms ending in feathered hands, sharp expressive eyes, large black and white beak wide open in a hyped laugh, leaning towards the viewer, {figurino}, {segura}, isolated on a plain light grey studio background, no text, no letters",
+  "figurino_padrao": "turista",
+  "figurinos": {
+    "rei": "wearing a crown of colorful feathers set with green emeralds, a gold necklace with a big emerald pendant and gold bracelets with emeralds",
+    "turista": "wearing a straw hat with a green band and tropical flowers, dark sunglasses, an open green Hawaiian shirt with white flowers and a thick gold chain"
+  },
+  "temas": {
+    "convite": {
+      "figurino": "rei",
+      "segura": "one wing raised high holding an open treasure chest full of gold coins",
+      "objeto": "an open wooden treasure chest with gold trim overflowing with gold coins"
+    },
+    "deposito": {
+      "figurino": "rei",
+      "segura": "one wing raised showing a shiny gold Chinese coin with a square hole",
+      "objeto": "a shiny gold Chinese coin with a square hole in the middle"
+    },
+    "envelopes": {
+      "figurino": "turista",
+      "segura": "one wing raised holding a red envelope",
+      "objeto": "a red Chinese hongbao lucky envelope with a gold border and a gold coin seal, slightly tilted"
+    },
+    "redes": {
+      "figurino": "turista",
+      "segura": "pointing at the viewer with one wing and holding up a smartphone in the other",
+      "objeto": "a smartphone with a glowing pink and orange camera app icon on the screen"
+    },
+    "telegram": {
+      "figurino": "turista",
+      "segura": "one wing stretched out pointing at a big glowing round blue icon, holding a smartphone in the other",
+      "objeto": "a big glowing round blue icon with a white paper plane symbol and a golden light ring"
+    },
+    "vip": {
+      "figurino": "turista",
+      "segura": "sitting on a golden throne, showing a black VIP card in one wing",
+      "objeto": "a black membership card with a gold crown and gold letters VIP"
+    },
+    "rebate": {
+      "figurino": "turista",
+      "segura": "both wings raised celebrating, one holding a fan of green banknotes",
+      "objeto": "a fan of green banknotes"
+    }
+  },
+  "folha": [
+    {
+      "figurino": "rei",
+      "banco": "criados/arara519-arara-rei-convite",
+      "arquivo": "/mnt/project-files/arara/folha/arara-rei-convite.webp"
+    },
+    {
+      "figurino": "rei",
+      "banco": "criados/arara519-arara-rei-deposito",
+      "arquivo": "/mnt/project-files/arara/folha/arara-rei-deposito.webp"
+    },
+    {
+      "figurino": "turista",
+      "banco": "criados/arara519-arara-turista-redes",
+      "arquivo": "/mnt/project-files/arara/folha/arara-turista-redes.webp"
+    },
+    {
+      "figurino": "turista",
+      "banco": "criados/arara519-arara-turista-envelopes",
+      "arquivo": "/mnt/project-files/arara/folha/arara-turista-envelopes.webp"
+    }
+  ],
+  "conferencia": {
+    "parecido_min": 0.75,
+    "infantil_alerta": 0.7,
+    "infantil_max": 0.9,
+    "nota": "infantil = chance pelo CLIP de ser 'fofo para crianças'. Calibrado em 16/10/2026 nas araras dos próprios banners: rei 0,82 a 0,88, turista 0,01 a 0,62; parecido com a folha 0,83 a 0,98. O limite de 0,9 deixa passar a arara original; acima disso reprova."
+  }
+}
