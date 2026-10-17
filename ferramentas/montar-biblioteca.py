@@ -124,6 +124,11 @@ for f in sorted(glob.glob(os.path.join(G, '*', '*__*.png'))):
         continue
     adicionar('recortes', ROTULO.get(grupo, grupo), f'{id_.replace("_", " ")} · {banner}', f, f'recorte da ARARA519 ({banner})', f'recorte-{banner}-{id_}')
 
+# ---- recortes da GPU (BiRefNet HR, zoom na caixa do grafo; ver estrutura/recorte-birefnet-runpod.md)
+for f in sorted(glob.glob(p('estrutura/recorte-teste/gpu/finais/*.png'))):
+    banner, id_ = os.path.basename(f)[:-4].split('__', 1)
+    adicionar('recortes', 'Recortes da GPU (BiRefNet HR)', f'{id_.replace("_", " ")} · {banner}', f, 'recorte GPU (BiRefNet HR, 2026-10-17)', f'recorte-gpu-{banner}-{id_}')
+
 # ---- logos
 for f, nome in [(p('logos/capivara362.png'), 'CAPIVARA362'), (p('logos/tucano362.png'), 'TUCANO362'), (p('arara/logo/logo.webp'), 'ARARA519')]:
     adicionar('logos', 'Logos das casas', nome, f, 'logo transparente', 'logo-' + nome)
