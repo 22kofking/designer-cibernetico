@@ -618,8 +618,23 @@ function excluir() {
 
 const CHAVE_COMPOSICOES = 'mesa:composicoes:v1';
 
+let predefinidas = []; // composições que vêm prontas com a biblioteca (biblioteca/composicoes.json)
+
 function lerComposicoes() {
   try { return JSON.parse(ler(CHAVE_COMPOSICOES) ?? '[]').filter((c) => !validarComposicao(c)); } catch { return []; }
+}
+
+async function carregarPredefinidas(urlBiblioteca) {
+  try {
+    const r = await fetch(new URL('composicoes.json', urlBiblioteca));
+    if (!r.ok) return;
+    const base = new URL('.', urlBiblioteca);
+    // os arquivos de imagem ficam ao lado do índice: o endereço de cada camada vira absoluto
+    predefinidas = (await r.json()).filter((c) => !validarComposicao(c)).map((c) => ({
+      ...c, predefinida: true, nos: c.nos.map((n) => ({ ...n, asset: n.asset ? new URL(n.asset, base).href : n.asset })),
+    }));
+  } catch { /* sem composições prontas: só as do usuário */ }
+  desenharComposicoes();
 }
 
 function gravarComposicoes(lista) {
@@ -627,6 +642,7 @@ function gravarComposicoes(lista) {
 }
 
 function nosParaComposicao() {
+  if (!cena) return [];
   const ids = marcadas.size ? [...marcadas] : selecionado ? [selecionado] : [];
   return cena.nos.filter((n) => ids.includes(n.id) && n.caixa); // na ordem de empilhamento da peça
 }
@@ -638,23 +654,24 @@ function secaoDe(no) {
 function desenharComposicoes() {
   const raiz = $('#composicoes');
   if (!raiz) return;
-  const lista = lerComposicoes();
+  const lista = [...lerComposicoes(), ...predefinidas];
   const escolhidas = nosParaComposicao();
   $('#comp-salvar').disabled = !escolhidas.length;
   $('#comp-escolha').textContent = marcadas.size > 1 ? `${marcadas.size} camadas escolhidas` : selecionado ? `camada ${selecionado}` : 'nenhuma camada escolhida';
   $('#comp-lista').innerHTML = lista.map((c, i) => `
     <li data-i="${i}">
       <button type="button" class="comp-colocar" title="Colocar na peça">
-        <strong>${esc(c.nome)}</strong><small>${c.nos.length} camada${c.nos.length > 1 ? 's' : ''}</small>
+        <strong>${esc(c.nome)}</strong><small>${c.nos.length} camada${c.nos.length > 1 ? 's' : ''}${c.predefinida ? ' · pronta' : ''}</small>
       </button>
       <button type="button" class="comp-baixar" title="Exportar arquivo .json">⭳</button>
-      <button type="button" class="comp-apagar" title="Apagar">✕</button>
+      ${c.predefinida ? '<span></span>' : '<button type="button" class="comp-apagar" title="Apagar">✕</button>'}
     </li>`).join('') || '<li class="dica">Nenhuma composição ainda.</li>';
   $('#comp-lista').querySelectorAll('li[data-i]').forEach((li) => {
     const c = lista[Number(li.dataset.i)];
     li.querySelector('.comp-colocar').onclick = () => colocarComposicao(c);
     li.querySelector('.comp-baixar').onclick = () => baixarComposicao(c);
-    li.querySelector('.comp-apagar').onclick = () => {
+    const apagar = li.querySelector('.comp-apagar');
+    if (apagar) apagar.onclick = () => {
       if (!confirm(`Apagar a composição "${c.nome}"?`)) return;
       gravarComposicoes(lerComposicoes().filter((x) => x.id !== c.id));
       desenharComposicoes();
@@ -1532,7 +1549,9 @@ async function iniciar() {
   ligarAtalhos();
   atualizarBotaoGuias();
   desenharAbas();
-  iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice: new URL(window.BIBLIOTECA ?? '../biblioteca/indice.json', location.href), aoEscolher: colocarDaBiblioteca });
+  const urlIndice = new URL(window.BIBLIOTECA ?? '../biblioteca/indice.json', location.href);
+  iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice, aoEscolher: colocarDaBiblioteca });
+  carregarPredefinidas(urlIndice);
 
   const resposta = await fetch(urlCena);
   if (!resposta.ok) throw new Error(`não achei a cena ${urlCena.pathname} (${resposta.status})`);
