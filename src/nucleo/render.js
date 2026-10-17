@@ -147,6 +147,14 @@ function aplicarAjustes(fabric, img, ajustes, mascara) {
   if (!ajustes && !mascara) return;
   const f = [];
   if (!ajustes) ajustes = {};
+  // linear: saída = ganho * entrada + desloc (0..1), a base dos níveis; um número vale para os três canais,
+  // uma lista [R, G, B] faz balanço de cor
+  if (ajustes.linear) {
+    const por = (v, def) => (Array.isArray(v) ? v : [v ?? def, v ?? def, v ?? def]);
+    const [gr, gg, gb] = por(ajustes.linear.ganho, 1);
+    const [dr, dg, db] = por(ajustes.linear.desloc, 0);
+    f.push(new fabric.filters.ColorMatrix({ matrix: [gr, 0, 0, 0, dr, 0, gg, 0, 0, dg, 0, 0, gb, 0, db, 0, 0, 0, 1, 0], colorsOnly: true }));
+  }
   if (ajustes.brilho) f.push(new fabric.filters.Brightness({ brightness: ajustes.brilho }));
   if (ajustes.contraste) f.push(new fabric.filters.Contrast({ contrast: ajustes.contraste }));
   if (ajustes.saturacao) f.push(new fabric.filters.Saturation({ saturation: ajustes.saturacao }));

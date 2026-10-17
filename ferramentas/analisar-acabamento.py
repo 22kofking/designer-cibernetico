@@ -3,6 +3,7 @@
 Uso: python3 ferramentas/analisar-acabamento.py <pasta-de-decomposicao> <saida-dir> [peca ...]
   pasta-de-decomposicao  ex.: /mnt/project-files/arara/decomposicao (tem <peca>.json e <peca>/mascaras/*.png)
   saida-dir              recebe <peca>/acabamento.json, <peca>/profundidade.png e <peca>/regioes.png
+Opções: --imagem=<png> mede essa imagem (a montagem) no lugar da referência; --mascaras grava as máscaras suaves das regiões.
 Sem peças na linha de comando, analisa todas as .json da pasta.
 
 Mede, por região (fundo longe/meio/perto, cada parte com máscara), o que um designer ajustaria: faixa tonal, cor por
@@ -56,6 +57,13 @@ def faixa_tonal(L, m):
         return None
     p = np.percentile(v, [1, 50, 99])
     return [r(p[0] / 100), r(p[1] / 100), r(p[2] / 100)]
+
+
+def tons_rgb(rgb, m):
+    """Percentis 1, 50 e 99 de cada canal (R, G, B), 0..1: a base do balanço de cor por região."""
+    if m.sum() < 50:
+        return None
+    return [[r(x) for x in np.percentile(rgb[..., c][m], [1, 50, 99])] for c in range(3)]
 
 
 def cor_por_faixa(lab, L, m):
@@ -214,12 +222,14 @@ def carregar_mascara(caminho, W, H):
     return a > 127
 
 
-def analisar(peca, pasta, saida):
+def analisar(peca, pasta, saida, imagem=None, mascaras=False):
     grafo = json.load(open(os.path.join(pasta, f'{peca}.json')))
     raiz = os.path.dirname(pasta.rstrip('/'))
     while not os.path.exists(os.path.join(raiz, grafo['referencia'])) and raiz != '/':
         raiz = os.path.dirname(raiz)  # a referência é relativa à raiz do projeto (/mnt/project-files)
     ref = Image.open(os.path.join(raiz, grafo['referencia'])).convert('RGB')
+    if imagem:  # mede outra imagem (a montagem) com as mesmas máscaras e caixas da referência
+        ref = Image.open(imagem).convert('RGB').resize(ref.size, Image.LANCZOS)
     W, H = ref.size
     rgb = np.asarray(ref, dtype=np.float32) / 255
     lab = lab_de_rgb(rgb)
@@ -253,7 +263,7 @@ def analisar(peca, pasta, saida):
              'convencao': 'luminosidade 0..1; Lab D65; posições em fração de W e H; tudo medido por código (ver ferramentas/analisar-acabamento.py)'}
     ficha['regioes'] = {}
     for nome, m in regioes_bg.items():
-        ficha['regioes'][f'fundo_{nome}'] = {'area': r(m.sum() / (W * H), 3), 'tons': faixa_tonal(L, m), 'cor_por_faixa_lab': cor_por_faixa(lab, L, m),
+        ficha['regioes'][f'fundo_{nome}'] = {'area': r(m.sum() / (W * H), 3), 'tons': faixa_tonal(L, m), 'tons_rgb': tons_rgb(rgb, m), 'cor_por_faixa_lab': cor_por_faixa(lab, L, m),
                                               'saturacao': saturacao(rgb, m), 'profundidade_media': r(prof[m].mean())}
     luzes = fontes_de_luz(L, rgb, bg, W, H)
     ficha['luz'] = {'fontes': luzes}
@@ -267,7 +277,7 @@ def analisar(peca, pasta, saida):
             continue
         pousa = max(regioes_bg, key=lambda k: (regioes_bg[k] & ndi.binary_dilation(m, iterations=20)).sum())
         bordas |= m & ~ndi.binary_erosion(m, iterations=2)
-        info = {'tipo': no['tipo'], 'pousa_em': f'fundo_{pousa}', 'area': r(m.sum() / (W * H), 4), 'tons': faixa_tonal(L, m),
+        info = {'tipo': no['tipo'], 'pousa_em': f'fundo_{pousa}', 'area': r(m.sum() / (W * H), 4), 'tons': faixa_tonal(L, m), 'tons_rgb': tons_rgb(rgb, m),
                 'cor_por_faixa_lab': cor_por_faixa(lab, L, m), 'saturacao': saturacao(rgb, m), 'luz': direcao_da_luz(L, m)}
         info.update(borda_e_contato(lab, m, None) or {})
         ficha['partes'][pid] = info
@@ -278,6 +288,15 @@ def analisar(peca, pasta, saida):
         ficha['partes']['texto'] = info
     ficha['textura'] = graos_e_nitidez(L, bg, bordas)
     os.makedirs(os.path.join(saida, peca), exist_ok=True)
+    if mascaras:  # máscaras suaves das regiões do fundo (branco com alfa) para a máscara de camada da Mesa
+        os.makedirs(os.path.join(saida, peca, 'mascaras'), exist_ok=True)
+        for nome, m in regioes_bg.items():
+            suave = ndi.gaussian_filter(ndi.binary_closing(ndi.binary_opening(m, iterations=2), iterations=6).astype(np.float32), 40)
+            suave = np.clip(suave * 1.0, 0, 1)
+            png = np.zeros((H, W, 4), np.uint8)
+            png[..., :3] = 255
+            png[..., 3] = (suave * 255).astype(np.uint8)
+            Image.fromarray(png, 'RGBA').save(os.path.join(saida, peca, 'mascaras', f'fundo_{nome}.png'))
     json.dump(ficha, open(os.path.join(saida, peca, 'acabamento.json'), 'w'), ensure_ascii=False, indent=1)
     Image.fromarray((prof * 255).astype(np.uint8)).save(os.path.join(saida, peca, 'profundidade.png'))
     cores = {'longe': (60, 120, 255), 'meio': (60, 200, 90), 'perto': (255, 170, 40)}
@@ -291,8 +310,10 @@ def analisar(peca, pasta, saida):
 
 
 if __name__ == '__main__':
-    pasta, saida, *pecas = sys.argv[1:]
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    opcoes = dict(a[2:].split('=', 1) if '=' in a else (a[2:], True) for a in sys.argv[1:] if a.startswith('--'))
+    pasta, saida, *pecas = args
     pecas = pecas or sorted(f[:-5] for f in os.listdir(pasta) if f.endswith('.json'))
     for p in pecas:
-        f = analisar(p, pasta, saida)
+        f = analisar(p, pasta, saida, imagem=opcoes.get('imagem'), mascaras=bool(opcoes.get('mascaras')))
         print(p, 'ok:', len(f['partes']), 'partes,', len(f['luz']['fontes']), 'fontes de luz, vinheta', f['vinheta'], ', grão', f['textura']['grao_sigma'])

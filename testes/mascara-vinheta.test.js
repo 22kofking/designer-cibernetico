@@ -41,3 +41,13 @@ test('máscara de camada: só aparece onde o alfa da máscara deixa', async () =
   assert.ok(meio > 90 && meio < 170, `meio ${meio}`);
   assert.equal(px(r, 0.9, 0.5)[0], 0);
 });
+
+test('ajustes.linear aplica ganho e deslocamento (níveis)', async () => {
+  const cinza = await dataUrl(await sharp({ create: { width: 40, height: 20, channels: 3, background: '#808080' } }).png().toBuffer());
+  const cena = {
+    versao: '0.1', formato: { largura: 400, altura: 200, fundo: '#000000' },
+    nos: [{ id: 'cor', tipo: 'imagem', papel: 'fundo', asset: cinza, encaixe: 'esticar', caixa: { x: 0, y: 0, w: 1, h: 1 }, ajustes: { linear: { ganho: 0.5, desloc: 0.1 } } }],
+  };
+  const v = px(await pixels(await renderizar(cena, '.')), 0.5, 0.5)[0];
+  assert.ok(Math.abs(v - (128 * 0.5 + 0.1 * 255)) < 4, `esperava ~90, veio ${v}`);
+});
