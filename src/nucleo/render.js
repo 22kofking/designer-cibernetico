@@ -137,15 +137,23 @@ function aplicarEfeitos(fabric, objs, no, copiar) {
 
 // Ajustes de imagem (como as camadas de ajuste, mas no próprio nó):
 //   ajustes { brilho -1..1, contraste -1..1, saturacao -1..1, matiz -180..180 (graus), tom {cor, intensidade 0..1}, desfoque 0..1 }
-function aplicarAjustes(fabric, img, ajustes) {
-  if (!ajustes) return;
+// Máscara de camada: PNG com alfa (o branco com alfa 0..1 é o quanto aparece), esticado sobre a imagem da camada.
+function filtroMascara(fabric, mascara) {
+  mascara.set({ left: 0, top: 0, scaleX: 1, scaleY: 1 });
+  return new fabric.filters.BlendImage({ image: mascara, mode: 'multiply' });
+}
+
+function aplicarAjustes(fabric, img, ajustes, mascara) {
+  if (!ajustes && !mascara) return;
   const f = [];
+  if (!ajustes) ajustes = {};
   if (ajustes.brilho) f.push(new fabric.filters.Brightness({ brightness: ajustes.brilho }));
   if (ajustes.contraste) f.push(new fabric.filters.Contrast({ contrast: ajustes.contraste }));
   if (ajustes.saturacao) f.push(new fabric.filters.Saturation({ saturation: ajustes.saturacao }));
   if (ajustes.matiz) f.push(new fabric.filters.HueRotation({ rotation: ajustes.matiz / 180 }));
   if (ajustes.tom) f.push(new fabric.filters.BlendColor({ color: ajustes.tom.cor, mode: 'tint', alpha: ajustes.tom.intensidade ?? 0.5 }));
   if (ajustes.desfoque) f.push(new fabric.filters.Blur({ blur: ajustes.desfoque }));
+  if (mascara) f.push(filtroMascara(fabric, mascara));
   if (!f.length) return;
   img.filters = f;
   img.applyFilters();
@@ -153,7 +161,8 @@ function aplicarAjustes(fabric, img, ajustes) {
 
 async function objetoImagem(fabric, no, caixa, carregarImagem) {
   const img = await carregarImagem(no.asset);
-  aplicarAjustes(fabric, img, no.ajustes);
+  const mascara = no.mascara ? await carregarImagem(no.mascara) : null;
+  aplicarAjustes(fabric, img, no.ajustes, mascara);
   const pos = encaixar(img.width, img.height, caixa, no.encaixe ?? 'conter', no.ancora ?? 'centro');
   img.set({ left: pos.x, top: pos.y, scaleX: pos.escalaX, scaleY: pos.escalaY, originX: 'left', originY: 'top' });
   if (no.rotacao) {
@@ -177,14 +186,18 @@ const copiarRetangulo = (fabric) => (o) => new fabric.Rect({
 });
 
 function objetoGradiente(fabric, no, caixa) {
-  const horizontal = (no.direcao ?? 'horizontal') === 'horizontal';
+  const direcao = no.direcao ?? 'horizontal';
+  const horizontal = direcao === 'horizontal';
   const rect = new fabric.Rect({
     left: caixa.x, top: caixa.y, width: caixa.w, height: caixa.h, strokeWidth: 0, originX: 'left', originY: 'top',
   });
+  // radial: elipse que acompanha a caixa (vinheta); offset 0 é o centro, 1 é o canto
+  const radial = direcao === 'radial';
   rect.set('fill', new fabric.Gradient({
-    type: 'linear',
+    type: radial ? 'radial' : 'linear',
     gradientUnits: 'pixels',
-    coords: horizontal ? { x1: 0, y1: 0, x2: caixa.w, y2: 0 } : { x1: 0, y1: 0, x2: 0, y2: caixa.h },
+    ...(radial ? { gradientTransform: [1, 0, 0, caixa.h / caixa.w, 0, 0] } : {}),
+    coords: radial ? { x1: caixa.w / 2, y1: caixa.w / 2, r1: 0, x2: caixa.w / 2, y2: caixa.w / 2, r2: caixa.w * Math.SQRT1_2 } : horizontal ? { x1: 0, y1: 0, x2: caixa.w, y2: 0 } : { x1: 0, y1: 0, x2: 0, y2: caixa.h },
     colorStops: no.paradas.map(([offset, cor, opacidade]) => ({ offset, color: corComOpacidade(cor, opacidade ?? 1) })),
   }));
   return aplicarEfeitos(fabric, [aplicarComum(rect, no)], no, copiarRetangulo(fabric));

@@ -878,7 +878,7 @@ function mostrarPropriedades() {
       ${campoNumero('Cantos', no.raio ?? 0, { id: 'r-raio', min: 0 })}`, true, 'preenchimento'));
   }
   if (no.tipo === 'gradiente') {
-    partes.push(secao('Gradiente', `<label class="sel"><span>Direção</span><select data-campo="g-direcao">${['horizontal', 'vertical'].map((v) => `<option ${no.direcao === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+    partes.push(secao('Gradiente', `<label class="sel"><span>Direção</span><select data-campo="g-direcao">${['horizontal', 'vertical', 'radial'].map((v) => `<option ${no.direcao === v ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
       <div id="paradas">${(no.paradas ?? []).map((p, i) => `<div class="parada"><input type="color" data-parada="${i}" data-k="1" value="${p[1]}"><input type="range" data-parada="${i}" data-k="0" min="0" max="1" step="0.01" value="${p[0]}" title="posição"><input type="range" data-parada="${i}" data-k="2" min="0" max="1" step="0.01" value="${p[2] ?? 1}" title="opacidade"></div>`).join('')}</div>
       <p class="dica">Cada parada: cor, posição e opacidade.</p>`, true, 'gradiente'));
   }
@@ -898,6 +898,14 @@ function mostrarPropriedades() {
       </div>
       ${deslizante('Desfoque', a.desfoque ?? 0, { min: 0, max: 1, passo: 0.01, id: 'a-desfoque', mostrar: (v) => Math.round(v * 100) })}
       <div class="botoes"><button type="button" id="zerar-ajustes">Zerar ajustes</button></div>`, false, 'ajustes'));
+  }
+  if (no.tipo === 'imagem') {
+    partes.push(secao('Máscara', `
+      <p class="dica">${no.mascara ? 'A camada aparece só onde a máscara (PNG com alfa) deixa.' : 'Sem máscara. Escolha um PNG com alfa: o alfa decide o quanto a camada aparece em cada ponto.'}</p>
+      <div class="botoes">
+        <label class="botao pequeno">${no.mascara ? 'Trocar máscara' : 'Escolher máscara'}<input id="mascara-arquivo" type="file" accept="image/png,image/webp"></label>
+        ${no.mascara ? '<button type="button" id="mascara-tirar">Tirar máscara</button>' : ''}
+      </div>`, !!no.mascara, 'mascara'));
   }
   if (no.tipo !== 'grupo') partes.push(secao('Estilos de camada', painelEfeitos(no), false, 'efeitos'));
   if (no.secao) partes.push(painelSecao(no));
@@ -925,6 +933,21 @@ function mostrarPropriedades() {
     });
   }
   if (no.tipo === 'imagem') {
+    $('#mascara-arquivo').onchange = async (e) => {
+      const arq = e.target.files[0];
+      e.target.value = '';
+      if (!arq) return;
+      try {
+        const url = await lerArquivo(arq, 'url');
+        await carregarImagem(url);
+        no.mascara = url;
+        registrar(`Máscara em ${no.id}`);
+        await agendarRedesenho();
+        mostrarPropriedades();
+      } catch (err) { aviso(`Não consegui abrir a máscara: ${err.message}`, true); }
+    };
+    const tirar = $('#mascara-tirar');
+    if (tirar) tirar.onclick = () => { delete no.mascara; registrar(`Tirar máscara de ${no.id}`); agendarRedesenho(); mostrarPropriedades(); };
     for (const k of ['brilho', 'contraste', 'saturacao', 'matiz', 'desfoque']) {
       ligar(painel, no, `a-${k}`, (v, el) => {
         no.ajustes = { ...(no.ajustes ?? {}), [k]: v };

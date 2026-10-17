@@ -62,6 +62,7 @@
         "encaixe": { "enum": ["conter", "cobrir", "esticar"] },
         "ancora": { "enum": ["centro", "base", "topo", "esquerda", "direita"] },
         "rotacao": { "type": "number" },
+        "mascara": { "type": "string", "description": "PNG com alfa que recorta a camada de imagem (branco com alfa 0..1 = quanto aparece), esticado sobre a imagem." },
         "opacidade": { "type": "number", "minimum": 0, "maximum": 1 },
         "visivel": { "type": "boolean" },
         "bloqueado": { "type": "boolean" },
@@ -103,7 +104,7 @@
         },
         "origem": { "$ref": "#/definitions/origem" },
         "asset": { "type": "string" },
-        "direcao": { "enum": ["horizontal", "vertical"] },
+        "direcao": { "enum": ["horizontal", "vertical", "radial"] },
         "paradas": {
           "type": "array",
           "items": { "type": "array", "minItems": 2, "maxItems": 3 }
