@@ -1,0 +1,17 @@
+{
+ "bicho": "capivara",
+ "pose": "punho",
+ "figurino": "base",
+ "objeto": null,
+ "camadas": [
+  "sombra",
+  "capivara_perna_d",
+  "capivara_perna_e",
+  "capivara_tronco",
+  "capivara_cabeca",
+  "capivara_braco_d",
+  "capivara_antebraco_d",
+  "capivara_braco_e",
+  "capivara_antebraco_e"
+ ]
+}

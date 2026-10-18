@@ -1,0 +1,157 @@
+{
+ "_leia": "Kit do bicho no enquadramento padrão. Partes em partes/*.png (768x1024, transparentes). Pontos = articulações já no enquadramento. Editar uma parte no PhotoCraft e salvar com o mesmo nome basta para todas as poses saírem com a edição.",
+ "bicho": "onca",
+ "tipo": "mamifero",
+ "aprovado": null,
+ "pontos": {
+  "cabeca_topo": [
+   384.0,
+   255.2
+  ],
+  "pescoco": [
+   384.0,
+   404.5
+  ],
+  "ombro_d": [
+   249.7,
+   456.7
+  ],
+  "cotovelo_d": [
+   212.4,
+   579.9
+  ],
+  "punho_d": [
+   218.3,
+   680.6
+  ],
+  "mao_fim_d": [
+   216.1,
+   732.8
+  ],
+  "ombro_e": [
+   525.8,
+   456.7
+  ],
+  "cotovelo_e": [
+   578.0,
+   579.9
+  ],
+  "punho_e": [
+   570.6,
+   680.6
+  ],
+  "mao_fim_e": [
+   566.8,
+   736.6
+  ],
+  "quadril_d": [
+   316.8,
+   676.9
+  ],
+  "joelho_d": [
+   316.8,
+   811.2
+  ],
+  "tornozelo_d": [
+   316.8,
+   889.6
+  ],
+  "pe_fim_d": [
+   264.6,
+   930.6
+  ],
+  "quadril_e": [
+   451.2,
+   676.9
+  ],
+  "joelho_e": [
+   466.1,
+   811.2
+  ],
+  "tornozelo_e": [
+   473.6,
+   889.6
+  ],
+  "pe_fim_e": [
+   525.8,
+   930.6
+  ],
+  "quadril_meio": [
+   384.0,
+   676.9
+  ]
+ },
+ "medidas": {
+  "cabeca_largura": 156.7,
+  "ombros_largura": 350.7,
+  "cintura_y": 650.7,
+  "cintura_largura": 201.5,
+  "antebraco_largura": 67.2
+ },
+ "caixas": {
+  "cabeca": [
+   252,
+   250,
+   509,
+   417
+  ],
+  "tronco": [
+   212,
+   391,
+   573,
+   799
+  ],
+  "perna_d": [
+   217,
+   644,
+   369,
+   942
+  ],
+  "perna_e": [
+   411,
+   643,
+   566,
+   949
+  ],
+  "braco_d": [
+   178,
+   407,
+   296,
+   613
+  ],
+  "antebraco_d": [
+   172,
+   554,
+   270,
+   738
+  ],
+  "braco_e": [
+   472,
+   403,
+   619,
+   613
+  ],
+  "antebraco_e": [
+   511,
+   554,
+   620,
+   743
+  ]
+ },
+ "camadas_de_baixo_para_cima": [
+  "perna_d",
+  "perna_e",
+  "tronco",
+  "cabeca",
+  "braco_d",
+  "antebraco_d",
+  "braco_e",
+  "antebraco_e"
+ ],
+ "angulos_repouso": {
+  "braco_d": 106.8,
+  "antebraco_d": 88.6,
+  "braco_e": 67.0,
+  "antebraco_e": 94.1
+ }
+}

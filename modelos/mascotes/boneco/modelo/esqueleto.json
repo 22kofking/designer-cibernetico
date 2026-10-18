@@ -1,0 +1,93 @@
+{
+ "_leia": "Esqueleto padrão do boneco. Igual para todo bicho. Os kits dizem onde cada articulação fica no desenho do bicho; as poses dizem o ângulo de cada osso.",
+ "enquadramento": {
+  "tamanho": [
+   768,
+   1024
+  ],
+  "cabeca_topo_y": 250,
+  "pes_y": 950,
+  "centro_x": 384
+ },
+ "articulacoes": [
+  "cabeca_topo",
+  "pescoco",
+  "ombro_d",
+  "cotovelo_d",
+  "punho_d",
+  "mao_fim_d",
+  "ombro_e",
+  "cotovelo_e",
+  "punho_e",
+  "mao_fim_e",
+  "quadril_d",
+  "joelho_d",
+  "tornozelo_d",
+  "pe_fim_d",
+  "quadril_e",
+  "joelho_e",
+  "tornozelo_e",
+  "pe_fim_e"
+ ],
+ "ossos": {
+  "cabeca": [
+   "pescoco",
+   "cabeca_topo"
+  ],
+  "tronco": [
+   "pescoco",
+   "quadril_meio"
+  ],
+  "braco_d": [
+   "ombro_d",
+   "cotovelo_d"
+  ],
+  "antebraco_d": [
+   "cotovelo_d",
+   "mao_fim_d"
+  ],
+  "braco_e": [
+   "ombro_e",
+   "cotovelo_e"
+  ],
+  "antebraco_e": [
+   "cotovelo_e",
+   "mao_fim_e"
+  ],
+  "coxa_d": [
+   "quadril_d",
+   "joelho_d"
+  ],
+  "canela_d": [
+   "joelho_d",
+   "pe_fim_d"
+  ],
+  "coxa_e": [
+   "quadril_e",
+   "joelho_e"
+  ],
+  "canela_e": [
+   "joelho_e",
+   "pe_fim_e"
+  ]
+ },
+ "camadas_de_baixo_para_cima": [
+  "perna_d",
+  "perna_e",
+  "tronco",
+  "cabeca",
+  "braco_d",
+  "antebraco_d",
+  "braco_e",
+  "antebraco_e"
+ ],
+ "encaixes_de_figurino": {
+  "cabeca": "cabeca",
+  "pescoco": "tronco",
+  "cintura": "tronco",
+  "braco_d": "braco_d",
+  "braco_e": "braco_e",
+  "antebraco_d": "antebraco_d",
+  "antebraco_e": "antebraco_e"
+ }
+}

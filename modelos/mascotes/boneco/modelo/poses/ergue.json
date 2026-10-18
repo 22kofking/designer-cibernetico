@@ -1,0 +1,15 @@
+{
+ "nome": "ergue",
+ "descricao": "braço erguido segurando objeto",
+ "angulos": {
+  "braco_d": -118.9,
+  "antebraco_d": -95.3,
+  "braco_e": 65.9,
+  "antebraco_e": 123.2
+ },
+ "maos": {
+  "d": "como no kit",
+  "e": "como no kit"
+ },
+ "pernas": "como no kit"
+}

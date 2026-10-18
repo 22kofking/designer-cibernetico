@@ -1,0 +1,157 @@
+{
+ "_leia": "Kit do bicho no enquadramento padrão. Partes em partes/*.png (768x1024, transparentes). Pontos = articulações já no enquadramento. Editar uma parte no PhotoCraft e salvar com o mesmo nome basta para todas as poses saírem com a edição.",
+ "bicho": "capivara",
+ "tipo": "mamifero",
+ "aprovado": null,
+ "pontos": {
+  "cabeca_topo": [
+   384.0,
+   250.7
+  ],
+  "pescoco": [
+   384.0,
+   414.2
+  ],
+  "ombro_d": [
+   235.4,
+   466.2
+  ],
+  "cotovelo_d": [
+   194.5,
+   588.9
+  ],
+  "punho_d": [
+   207.9,
+   692.9
+  ],
+  "mao_fim_d": [
+   209.4,
+   744.9
+  ],
+  "ombro_e": [
+   532.6,
+   466.2
+  ],
+  "cotovelo_e": [
+   573.5,
+   588.9
+  ],
+  "punho_e": [
+   564.6,
+   692.9
+  ],
+  "mao_fim_e": [
+   562.3,
+   744.9
+  ],
+  "quadril_d": [
+   320.8,
+   692.9
+  ],
+  "joelho_d": [
+   302.3,
+   826.6
+  ],
+  "tornozelo_d": [
+   292.6,
+   904.7
+  ],
+  "pe_fim_d": [
+   257.7,
+   934.4
+  ],
+  "quadril_e": [
+   447.2,
+   692.9
+  ],
+  "joelho_e": [
+   469.5,
+   826.6
+  ],
+  "tornozelo_e": [
+   476.9,
+   904.7
+  ],
+  "pe_fim_e": [
+   517.8,
+   934.4
+  ],
+  "quadril_meio": [
+   384.0,
+   692.9
+  ]
+ },
+ "medidas": {
+  "cabeca_largura": 185.8,
+  "ombros_largura": 364.1,
+  "cintura_y": 670.6,
+  "cintura_largura": 215.5,
+  "antebraco_largura": 59.4
+ },
+ "caixas": {
+  "cabeca": [
+   233,
+   250,
+   541,
+   426
+  ],
+  "tronco": [
+   192,
+   421,
+   580,
+   810
+  ],
+  "perna_d": [
+   215,
+   665,
+   359,
+   949
+  ],
+  "perna_e": [
+   413,
+   665,
+   559,
+   950
+  ],
+  "braco_d": [
+   157,
+   413,
+   276,
+   622
+  ],
+  "antebraco_d": [
+   156,
+   563,
+   244,
+   747
+  ],
+  "braco_e": [
+   496,
+   414,
+   616,
+   622
+  ],
+  "antebraco_e": [
+   528,
+   563,
+   617,
+   747
+  ]
+ },
+ "camadas_de_baixo_para_cima": [
+  "perna_d",
+  "perna_e",
+  "tronco",
+  "cabeca",
+  "braco_d",
+  "antebraco_d",
+  "braco_e",
+  "antebraco_e"
+ ],
+ "angulos_repouso": {
+  "braco_d": 108.4,
+  "antebraco_d": 84.5,
+  "braco_e": 71.6,
+  "antebraco_e": 94.1
+ }
+}
