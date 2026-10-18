@@ -1501,22 +1501,46 @@ function atualizarBotaoGuias() {
 
 // ---------- abas ----------
 
+// Cenas com `grupo` (um bicho, uma marca) ganham um seletor de grupo antes das abas;
+// só as abas do grupo escolhido aparecem. window.GRUPOS_CENAS dá o nome de cada grupo.
+const grupoDe = (c) => c.grupo ?? '';
+const NOMES_GRUPO = window.GRUPOS_CENAS ?? {};
+
+async function abrirAba(c) {
+  urlCena = new URL(c.url, location.href);
+  guardar('mesa:aba', c.url);
+  desenharAbas();
+  const resposta = await fetch(urlCena);
+  await abrir(await resposta.json(), urlCena);
+}
+
 function desenharAbas() {
   const nav = $('#abas');
   if (!CENAS?.length) { nav.hidden = true; return; }
   nav.hidden = false;
-  nav.innerHTML = CENAS.map((c, i) => `<button type="button" role="tab" data-i="${i}" aria-selected="${new URL(c.url, location.href).href === urlCena.href}">${esc(c.rotulo ?? c.nome)}</button>`).join('');
+  const atual = CENAS.find((c) => new URL(c.url, location.href).href === urlCena.href);
+  const grupos = [...new Set(CENAS.map(grupoDe))];
+  const grupo = atual ? grupoDe(atual) : grupos[0];
+  const seletor = grupos.length > 1
+    ? `<select id="abas-grupo" aria-label="Grupo de peças">${grupos.map((g) => `<option value="${esc(g)}"${g === grupo ? ' selected' : ''}>${esc(NOMES_GRUPO[g] ?? (g || 'Peças'))}</option>`).join('')}</select>`
+    : '';
+  nav.innerHTML = seletor + CENAS.map((c, i) => (grupoDe(c) === grupo
+    ? `<button type="button" role="tab" data-i="${i}" aria-selected="${c === atual}">${esc(c.rotulo ?? c.nome)}</button>` : '')).join('');
   nav.querySelectorAll('button').forEach((b) => {
     b.onclick = async () => {
-      const c = CENAS[Number(b.dataset.i)];
-      urlCena = new URL(c.url, location.href);
-      guardar('mesa:aba', c.url);
-      desenharAbas();
-      const resposta = await fetch(urlCena);
-      await abrir(await resposta.json(), urlCena);
-      b.focus();
+      await abrirAba(CENAS[Number(b.dataset.i)]);
+      nav.querySelector(`button[data-i="${b.dataset.i}"]`)?.focus();
     };
   });
+  const sel = $('#abas-grupo');
+  if (sel) {
+    sel.onchange = async () => {
+      // troca de grupo: abre a mesma peça no outro grupo, quando existe, senão a primeira dele
+      const mesma = CENAS.find((c) => grupoDe(c) === sel.value && atual && c.rotulo === atual.rotulo);
+      await abrirAba(mesma ?? CENAS.find((c) => grupoDe(c) === sel.value));
+      $('#abas-grupo')?.focus();
+    };
+  }
 }
 
 // ---------- início ----------

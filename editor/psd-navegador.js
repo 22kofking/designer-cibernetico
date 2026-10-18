@@ -22,6 +22,16 @@ function folhas(camadas, prefixo = '', saida = []) {
 
 const idSeguro = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'camada';
 
+// Papel da camada pelo nome que os PSDs do projeto usam (fundo, mascote, logo, texto); o resto é elemento.
+function papelPeloNome(nome) {
+  const n = nome.toLowerCase();
+  if (/(^|\/)fundo/.test(n)) return 'fundo';
+  if (/mascote|personagem/.test(n)) return 'mascote';
+  if (/logo/.test(n)) return 'logo';
+  if (/texto/.test(n)) return 'texto';
+  return 'elemento';
+}
+
 export async function abrirPsd(buffer, nomeArquivo) {
   const { readPsd } = await import(AG_PSD);
   const psd = readPsd(buffer, { skipThumbnail: true, skipCompositeImageData: true });
@@ -36,7 +46,7 @@ export async function abrirPsd(buffer, nomeArquivo) {
     return {
       id,
       tipo: 'imagem',
-      papel: c.text ? 'texto' : 'elemento',
+      papel: c.text ? 'texto' : papelPeloNome(c.caminho),
       asset: c.canvas.toDataURL('image/png'),
       caixa: { x: r(c.left / W), y: r(c.top / H), w: r((c.right - c.left) / W), h: r((c.bottom - c.top) / H) },
       encaixe: 'esticar',
