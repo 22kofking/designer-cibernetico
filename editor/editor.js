@@ -787,6 +787,14 @@ function campoNumero(rotulo, valor, { passo = 1, min, max, id, sufixo = '' } = {
   return `<label class="num"><span>${rotulo}</span><input type="number" data-campo="${id}" step="${passo}" ${min !== undefined ? `min="${min}"` : ''} ${max !== undefined ? `max="${max}"` : ''} value="${valor}">${sufixo ? `<i>${sufixo}</i>` : ''}</label>`;
 }
 
+const CANAIS = ['R', 'G', 'B'];
+// Níveis do nó como [ganho[3], desloc[3]] (o renderizador aceita número único ou lista por canal).
+function niveisDe(a) {
+  const lin = a.linear ?? {};
+  const tres = (v, def) => (Array.isArray(v) ? [...v] : [v ?? def, v ?? def, v ?? def]);
+  return [tres(lin.ganho, 1), tres(lin.desloc, 0)];
+}
+
 function deslizante(rotulo, valor, { min, max, passo, id, mostrar = (v) => v }) {
   return `<label class="desl"><span>${rotulo}</span><input type="range" data-campo="${id}" min="${min}" max="${max}" step="${passo}" value="${valor}"><output>${mostrar(valor)}</output></label>`;
 }
@@ -897,6 +905,11 @@ function mostrarPropriedades() {
         <div class="botoes"><button type="button" id="sem-tom">Sem tom</button></div>
       </div>
       ${deslizante('Desfoque', a.desfoque ?? 0, { min: 0, max: 1, passo: 0.01, id: 'a-desfoque', mostrar: (v) => Math.round(v * 100) })}
+      <div class="tom">
+        <span>Níveis por canal (ganho = brancos, desloc = pretos)</span>
+        ${CANAIS.map((c, i) => `${deslizante(`${c} ganho`, niveisDe(a)[0][i], { min: 0.5, max: 1.6, passo: 0.01, id: `n-g${i}`, mostrar: (v) => Number(v).toFixed(2) })}
+        ${deslizante(`${c} desloc`, niveisDe(a)[1][i], { min: -0.25, max: 0.25, passo: 0.005, id: `n-d${i}`, mostrar: (v) => Number(v).toFixed(2) })}`).join('')}
+      </div>
       <div class="botoes"><button type="button" id="zerar-ajustes">Zerar ajustes</button></div>`, false, 'ajustes'));
   }
   if (no.tipo === 'imagem') {
@@ -955,6 +968,19 @@ function mostrarPropriedades() {
         if (!Object.keys(no.ajustes).length) delete no.ajustes;
         el.dataset.mostrar = k === 'matiz' ? `${v}°` : String(Math.round(v * 100));
       }, `Ajuste de ${no.id}`);
+    }
+    for (let i = 0; i < 3; i++) {
+      for (const [k, def] of [['g', 1], ['d', 0]]) {
+        ligar(painel, no, `n-${k}${i}`, (v, el) => {
+          const [ganho, desloc] = niveisDe(no.ajustes ?? {});
+          (k === 'g' ? ganho : desloc)[i] = v;
+          const neutro = ganho.every((x) => x === 1) && desloc.every((x) => x === 0);
+          no.ajustes = { ...(no.ajustes ?? {}) };
+          if (neutro) delete no.ajustes.linear; else no.ajustes.linear = { ganho, desloc };
+          if (!Object.keys(no.ajustes).length) delete no.ajustes;
+          el.dataset.mostrar = v.toFixed(2);
+        }, `Níveis de ${no.id}`);
+      }
     }
     const tomAtual = () => ({ cor: no.ajustes?.tom?.cor ?? '#ffffff', intensidade: no.ajustes?.tom?.intensidade ?? 0.5 });
     const aplicarTom = (mudanca, rotulo) => {
