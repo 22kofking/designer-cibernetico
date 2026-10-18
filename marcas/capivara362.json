@@ -25,6 +25,16 @@
       { "texto": "VIP", "estilo": "dourado", "peso": 2.4 }
     ]
   },
+  "geracao": {
+    "estilo_fundo": "wide panoramic casino game banner background, vivid saturated colors, cinematic lighting, the left third fades smoothly into solid pure black",
+    "estilo_objeto": "glossy 3D casino game asset, vivid saturated colors, golden rim light",
+    "fundos": {
+      "telegram": "huge explosion of orange and golden fire on the right half, white electric lightning bolts, flying sparks, bright light burst",
+      "envelopes": "strong golden and red light burst on the right half, glowing fire trails and swirls, flying golden sparks, festive red and gold glow",
+      "vip": "deep red and orange background with a glowing golden ring of light on the right, blurred bokeh gold coins in the distance, sparks"
+    },
+    "fundo_padrao": "explosion of orange and golden fire on the right half, sparks and light rays"
+  },
   "critico": {
     "delta_max": 10,
     "L_mediana": [45, 150],

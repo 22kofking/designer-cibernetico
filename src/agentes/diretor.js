@@ -10,6 +10,8 @@ import { planejar } from '../desconstrucao/plano.js';
 import { PAPEL_DO_TIPO } from '../desconstrucao/grafo.js';
 import { FORMATOS_VETORIAIS } from '../oficinas/elementos.js';
 import { geradorParaParte } from '../oficinas/procedural.js';
+import { pedidosDaPeca } from '../geracao/componentes.js';
+import { lerPersonagem } from '../mascote/personagem.js';
 
 export async function lerMarca(arquivo) {
   const marca = JSON.parse(await readFile(arquivo, 'utf8'));
@@ -56,19 +58,34 @@ function opcoesDaParte(banco, no, p, marca, tema, { vectorcraft }) {
   return itens;
 }
 
-export async function dirigir(banco, grafo, marca, pasta, { referencias = [], escala = 2, vectorcraft = !!process.env.VECTORCRAFT_CLI } = {}) {
+// gerar: a geração por componentes entra como opção (fundo, mascote e objeto na
+// mão nascem separados pelo gateway). Só monta as opções; o gasto acontece quando
+// um especialista usa uma delas, e passa pelo orçamento do orquestrador.
+export async function dirigir(banco, grafo, marca, pasta, { referencias = [], escala = 2, vectorcraft = !!process.env.VECTORCRAFT_CLI, gerar = false } = {}) {
   const tema = grafo.tema;
   const plano = await planejar(banco, grafo, { referencias });
   const { cena, pendentes } = await grafoParaCena(banco, grafo, plano, pasta, { escala, referencias, logo: marca.logo });
   const porNo = new Map(plano.nos.map((p) => [p.no, p]));
+  const personagem = gerar && marca.personagem ? await lerPersonagem(marca.personagem) : null;
+  const pedidos = gerar ? pedidosDaPeca(grafo, marca, personagem, { formato: cena.formato }) : [];
+  const pedidoDe = (id) => pedidos.find((p) => p.no === id);
   const tarefas = [];
   for (const no of grafo.nos) {
     const papel = PAPEL_DO_TIPO[no.tipo] ?? 'elemento';
     if (no.tipo === 'efeito' || no.tipo === 'texto' || no.tipo === 'logo') continue;
-    // Objeto na mão do mascote vem com o mascote (montagem em partes).
-    if (no.tipo === 'objeto_segurado' && no.camada_psd === 'mascote') continue;
+    // Objeto na mão do mascote vem com o mascote (montagem em partes), a não ser
+    // que a geração por componentes vá fazê-lo como camada própria.
+    if (no.tipo === 'objeto_segurado' && no.camada_psd === 'mascote' && !pedidoDe(no.id)) continue;
     if (!Array.isArray(no.caixa) && no.tipo !== 'fundo') continue;
     const p = porNo.get(no.id);
+    const opcoes = opcoesDaParte(banco, no, p, marca, tema, { vectorcraft });
+    const pedido = pedidoDe(no.id);
+    if (pedido) {
+      const gerada = { tipo: 'gerar', pedido, titulo: `${pedido.tipo} gerado sozinho (componente)`, ...(papel === 'mascote' ? { tema } : {}) };
+      // O mascote em partes já pronto do mesmo tema continua na frente (não gasta).
+      const lugar = papel === 'mascote' ? opcoes.findIndex((o) => !(o.tipo === 'montagem' || o.tema === tema)) : 0;
+      opcoes.splice(lugar < 0 ? opcoes.length : lugar, 0, gerada);
+    }
     tarefas.push({
       no: no.id,
       papel,
@@ -76,7 +93,7 @@ export async function dirigir(banco, grafo, marca, pasta, { referencias = [], es
       caixa: no.caixa ?? [0, 0, 1, 1],
       descricao: no.descricao ?? null,
       acao_do_plano: p?.acao ?? null,
-      opcoes: opcoesDaParte(banco, no, p, marca, tema, { vectorcraft }),
+      opcoes,
     });
   }
   const linhas = grafo.nos.filter((n) => n.tipo === 'texto' && Array.isArray(n.caixa));
@@ -92,7 +109,7 @@ export async function dirigir(banco, grafo, marca, pasta, { referencias = [], es
       opcoes: textos ? [{ tipo: 'texto', linhas: textos, titulo: `textos da marca (${tema})` }] : [],
     });
   }
-  return { tema, plano, cena, pendentes, tarefas };
+  return { tema, plano, cena, pendentes, tarefas, pedidos, personagem };
 }
 
 export function caixaQueCobre(caixas) {

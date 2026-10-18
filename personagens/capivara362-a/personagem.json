@@ -14,19 +14,23 @@
   "temas": {
     "resgate": {
       "figurino": "sorte",
-      "segura": "holding a red lucky pouch with gold details in one hand and a red envelope in the other"
+      "segura": "holding a red lucky pouch with gold details in one hand and a red envelope in the other",
+      "objeto": "a red lucky pouch with gold details"
     },
     "convite": {
       "figurino": "rua",
-      "segura": "holding up a smartphone showing a colorful slot game screen"
+      "segura": "holding up a smartphone showing a colorful slot game screen",
+      "objeto": "a smartphone showing a colorful slot game screen"
     },
     "telegram": {
       "figurino": "mago",
-      "segura": "holding out a big glowing blue crystal orb with a white paper plane symbol inside, crackling with lightning"
+      "segura": "holding out a big glowing blue crystal orb with a white paper plane symbol inside, crackling with lightning",
+      "objeto": "a big glowing blue crystal orb with a white paper plane symbol inside, crackling with blue lightning"
     },
     "envelopes": {
       "figurino": "sorte",
-      "segura": "one paw stretched towards the camera and the other arm raised holding a red envelope"
+      "segura": "one paw stretched towards the camera and the other arm raised holding a red envelope",
+      "objeto": "a red Chinese hongbao lucky envelope with gold border and a gold coin seal, slightly tilted"
     },
     "vip": {
       "figurino": "farao",
@@ -46,7 +50,8 @@
     },
     "redes": {
       "figurino": "pirata",
-      "segura": "holding a smartphone showing a red video play icon"
+      "segura": "holding a smartphone showing a red video play icon",
+      "objeto": "a smartphone showing a red video play icon"
     }
   },
   "folha": [

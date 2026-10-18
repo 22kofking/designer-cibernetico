@@ -50,7 +50,10 @@ export async function criticar(cena, pasta, { grafo, referencia, marca, tarefas,
     } else delta = +(await deltaDeCor(png, ref, { caixaA: caixa, caixaB: caixa })).toFixed(2);
     const alertas = [];
     // O mascote é o nosso de propósito (outro bicho, outra roupa): a cor dele é só aviso.
-    if (delta > deltaMax) (t.papel === 'mascote' ? alertas : problemas).push(`cor longe da referência (ΔE ${delta} > ${deltaMax})`);
+    // Objeto sem máscara no grafo mede a caixa inteira (que tem a mão do personagem
+    // deles e o fundo): também só aviso.
+    const soAviso = t.papel === 'mascote' || (t.papel === 'elemento' && !noGrafo?.mascara);
+    if (delta > deltaMax) (soAviso ? alertas : problemas).push(`cor longe da referência (ΔE ${delta} > ${deltaMax})`);
     if (nos.some((n) => n.tipo === 'retangulo')) problemas.push('lugar vazio: o banco não tem material para esta parte');
     if (nos.some((n) => n.origem?.fonte === 'referencias')) problemas.push('usa material da referência');
     if (t.papel === 'mascote') {

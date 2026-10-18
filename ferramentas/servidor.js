@@ -9,10 +9,11 @@ const tipos = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'applic
 const porta = Number(process.env.PORTA ?? 5173);
 
 createServer(async (req, res) => {
-  const caminho = path.join(raiz, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+  let caminho = path.join(raiz, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+  if (req.url.split('?')[0].endsWith('/')) caminho = path.join(caminho, 'index.html'); // pasta: serve a página (e o tipo certo)
   if (!caminho.startsWith(raiz)) { res.writeHead(403).end(); return; }
   try {
-    const corpo = await readFile(caminho.endsWith('/') ? path.join(caminho, 'index.html') : caminho);
+    const corpo = await readFile(caminho);
     res.writeHead(200, { 'content-type': tipos[path.extname(caminho)] ?? 'application/octet-stream' }).end(corpo);
   } catch {
     res.writeHead(404).end('não encontrado');
