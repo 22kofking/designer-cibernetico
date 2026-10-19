@@ -28,6 +28,7 @@ podem nascer separados pelo gateway e toda peça sai também em PSD com camadas,
 | Mesa de Cena | `editor/` | editor no navegador no estilo do PhotoCraft: camadas com mistura e opacidade, estilos de camada (sombra, brilho externo, contorno), ajustes de imagem, histórico, guias magnéticas, zoom, atalhos, abas por peça, PNG/WebP/JPG e PSD de ida e volta |
 | Armazém da Mesa | `editor/armazem*.js`, `editor/projetos.js` | projetos, peças, versões e composições guardados; na Mesa online, no banco dela (vale em qualquer aparelho, o Claude lê e grava) com cópia no IndexedDB do navegador; fora dele, só no IndexedDB |
 | Interface da Mesa | `editor/interface.js`, `editor/index.html` | trilho e gaveta à esquerda (Biblioteca, Composições, Versões, Histórico, Atalhos), a peça no meio, camadas e propriedades à direita; a gaveta escolhida fica guardada no navegador |
+| Modelos e Marca | `editor/modelos.js`, `editor/marca.js`, `editor/marca-painel.js` | modelos (peças prontas guardadas no Armazém, "Usar" cria uma peça nova) e kit da marca (cores, fontes e logos tirados de uma peça; clique aplica na camada escolhida) |
 | Módulos do editor | `editor/util.js`, `editor/guias.js`, `editor/arvore.js` | utilidades, guias magnéticas e consulta à árvore de nós, tirados do `editor.js` |
 
 ## Como usar

@@ -13,6 +13,9 @@ import { iniciarBiblioteca } from './biblioteca.js';
 import { abrirArmazem, guardarImagem, tirarImagensDaCena } from './armazem-navegador.js';
 import { iniciarProjetos } from './projetos.js';
 import { iniciarInterface } from './interface.js';
+import { iniciarModelos } from './modelos.js';
+import { iniciarMarca } from './marca-painel.js';
+import { extrairKit, aplicarCorNo } from './marca.js';
 import { $, esc, arred, aviso, guardar, ler, lerArquivo } from './util.js';
 import { alinharAsGuias, desenharGuiasNo } from './guias.js';
 import { acharNoEm, listaDoNoEm, idsDe } from './arvore.js';
@@ -1745,6 +1748,70 @@ async function ligarArmazem() {
     atualizarMiniatura: atualizarMiniaturaAtual,
     gerarMiniatura,
   });
+  iniciarModelos({
+    armazem, aviso, esc,
+    cenaAtual: () => cena,
+    baseAtual: () => baseAssets,
+    pecaAtual: () => pecaAtual,
+    miniaturaDe,
+    descarregar,
+    abrirPeca: async (p) => { await abrirPeca(p); },
+    projetoPadrao: projetoAvulsas,
+    aoCriarPeca: () => projetos?.atualizar(),
+  });
+  const marca = iniciarMarca({
+    armazem, aviso, esc,
+    cenaAtual: () => cena,
+    baseAtual: () => baseAssets,
+    aplicarCor: aplicarCorDaMarca,
+    aplicarFonte: aplicarFonteDaMarca,
+    colocarLogo: colocarLogoDaMarca,
+  });
+  $('#trilho-modelos').hidden = false;
+  $('#trilho-marca').hidden = false;
+  semearMarcas(cenas).then(() => marca.atualizar()); // em segundo plano: não segura a abertura da peça
+}
+
+// Aplicar o kit da marca à camada escolhida (as funções puras estão em marca.js).
+function aplicarCorDaMarca(hex, { todas = false } = {}) {
+  const no = selecionado ? acharNo(selecionado) : null;
+  if (!no) { aviso('Escolha antes uma camada de texto ou um retângulo', true); return; }
+  const rotulo = aplicarCorNo(no, hex, { todas });
+  if (!rotulo) { aviso('Esta camada não tem uma cor para trocar', true); return; }
+  registrar(rotulo);
+  agendarRedesenho();
+  mostrarPropriedades();
+}
+
+async function aplicarFonteDaMarca(f) {
+  const no = selecionado ? acharNo(selecionado) : null;
+  if (no?.tipo !== 'bloco_texto') { aviso('Escolha antes uma camada de texto', true); return; }
+  try {
+    cena.fontes = cena.fontes ?? [];
+    if (f.arquivo && !cena.fontes.some((x) => x.familia === f.familia && (x.peso ?? 400) === f.peso)) cena.fontes.push({ familia: f.familia, peso: f.peso, arquivo: f.arquivo });
+    await carregarFontes(cena, baseAssets);
+    no.fonte = { ...no.fonte, familia: f.familia, peso: f.peso };
+    registrar(`Fonte ${f.familia} em ${no.id}`);
+    await agendarRedesenho();
+    mostrarPropriedades();
+  } catch (e) { aviso(`Não apliquei a fonte: ${e.message}`, true); }
+}
+
+const colocarLogoDaMarca = (l) => colocarImagem(l.asset, l.nome, 'kit da marca').catch((e) => aviso(`Não consegui colocar o logo: ${e.message}`, true));
+
+// Na primeira vez, cada grupo de peças ganha um kit tirado da sua primeira peça (editável depois).
+async function semearMarcas(cenas) {
+  if ((await armazem.listarMarcas()).length) return;
+  const primeiras = new Map();
+  for (const c of cenas) if (c.url && !primeiras.has(c.grupo ?? '')) primeiras.set(c.grupo ?? '', c);
+  for (const [grupo, c] of primeiras) {
+    try {
+      const url = resolver(c.url);
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      await armazem.criarMarca(NOMES_GRUPO[grupo] ?? (grupo || 'Peças'), extrairKit(await r.json(), url));
+    } catch { /* sem o kit desse grupo; dá para criar à mão */ }
+  }
 }
 
 // Acesso para depuração e para testes automáticos.
