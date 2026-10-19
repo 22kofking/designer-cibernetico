@@ -15,8 +15,8 @@ import { iniciarProjetos } from './projetos.js';
 import { iniciarInterface } from './interface.js';
 import { iniciarModelos } from './modelos.js';
 import { iniciarMarca } from './marca-painel.js';
-import { extrairKit, aplicarCorNo } from './marca.js';
-import { $, esc, arred, aviso, guardar, ler, lerArquivo } from './util.js';
+import { extrairKit, aplicarCorNo, mapearEnderecos } from './marca.js';
+import { $, esc, arred, aviso, guardar, ler, lerArquivo, paraRelativo, caminhoRelativo } from './util.js';
 import { alinharAsGuias, desenharGuiasNo } from './guias.js';
 import { acharNoEm, listaDoNoEm, idsDe } from './arvore.js';
 import { capturar, instanciar, reposicionar, caixaDoConjunto, larguraInicial, validarComposicao } from './composicoes.js';
@@ -1521,7 +1521,7 @@ async function abrirArquivo(arquivo) {
     } else {
       await tirarImagensDaCena(json);
       const peca = await armazem.criarPeca({
-        projeto: (await projetoAvulsas()).id, nome: arquivo.name.replace(/\.[^.]+$/, ''), cena: json, base: baseAssets.href,
+        projeto: (await projetoAvulsas()).id, nome: arquivo.name.replace(/\.[^.]+$/, ''), cena: json, base: paraRelativo(baseAssets.href),
       });
       await abrirPeca(peca);
       projetos?.atualizar();
@@ -1777,7 +1777,7 @@ async function ligarArmazem() {
     gerarMiniatura,
   });
   iniciarModelos({
-    armazem, aviso, esc,
+    paraRelativo, armazem, aviso, esc,
     cenaAtual: () => cena,
     baseAtual: () => baseAssets,
     pecaAtual: () => pecaAtual,
@@ -1816,7 +1816,8 @@ async function aplicarFonteDaMarca(f) {
   if (no?.tipo !== 'bloco_texto') { aviso('Escolha antes uma camada de texto', true); return; }
   try {
     cena.fontes = cena.fontes ?? [];
-    if (f.arquivo && !cena.fontes.some((x) => x.familia === f.familia && (x.peso ?? 400) === f.peso)) cena.fontes.push({ familia: f.familia, peso: f.peso, arquivo: f.arquivo });
+    const arquivo = f.arquivo ? caminhoRelativo(baseAssets.href, new URL(paraRelativo(f.arquivo), location.href).href) : null;
+    if (arquivo && !cena.fontes.some((x) => x.familia === f.familia && (x.peso ?? 400) === f.peso)) cena.fontes.push({ familia: f.familia, peso: f.peso, arquivo });
     await carregarFontes(cena, baseAssets);
     no.fonte = { ...no.fonte, familia: f.familia, peso: f.peso };
     registrar(`Fonte ${f.familia} em ${no.id}`);
@@ -1825,7 +1826,7 @@ async function aplicarFonteDaMarca(f) {
   } catch (e) { aviso(`Não apliquei a fonte: ${e.message}`, true); }
 }
 
-const colocarLogoDaMarca = (l) => colocarImagem(l.asset, l.nome, 'kit da marca').catch((e) => aviso(`Não consegui colocar o logo: ${e.message}`, true));
+const colocarLogoDaMarca = (l) => colocarImagem(caminhoRelativo(baseAssets.href, new URL(paraRelativo(l.asset), location.href).href), l.nome, 'kit da marca').catch((e) => aviso(`Não consegui colocar o logo: ${e.message}`, true));
 
 // Na primeira vez, cada grupo de peças ganha um kit tirado da sua primeira peça (editável depois).
 async function semearMarcas(cenas) {
@@ -1837,7 +1838,7 @@ async function semearMarcas(cenas) {
       const url = resolver(c.url);
       const r = await fetch(url);
       if (!r.ok) continue;
-      await armazem.criarMarca(NOMES_GRUPO[grupo] ?? (grupo || 'Peças'), extrairKit(await r.json(), url));
+      await armazem.criarMarca(NOMES_GRUPO[grupo] ?? (grupo || 'Peças'), mapearEnderecos(extrairKit(await r.json(), url), paraRelativo));
     } catch { /* sem o kit desse grupo; dá para criar à mão */ }
   }
 }

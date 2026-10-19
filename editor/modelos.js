@@ -2,7 +2,7 @@
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 
-export function iniciarModelos({ armazem, aviso, esc, cenaAtual, baseAtual, pecaAtual, miniaturaDe, descarregar, abrirPeca, projetoPadrao, aoCriarPeca = () => {} }) {
+export function iniciarModelos({ paraRelativo = (h) => h, armazem, aviso, esc, cenaAtual, baseAtual, pecaAtual, miniaturaDe, descarregar, abrirPeca, projetoPadrao, aoCriarPeca = () => {} }) {
   const lista = $('#modelos-lista');
 
   async function desenhar() {
@@ -58,7 +58,7 @@ export function iniciarModelos({ armazem, aviso, esc, cenaAtual, baseAtual, peca
       const cena = structuredClone(cenaAtual());
       const base = baseAtual();
       const miniatura = await miniaturaDe(cena, base).catch(() => null);
-      await armazem.salvarModelo({ nome: nome.trim(), categoria: null, cena, base: base.href, miniatura });
+      await armazem.salvarModelo({ nome: nome.trim(), categoria: null, cena, base: paraRelativo(base.href), miniatura });
       aviso(`Modelo "${nome.trim()}" guardado`);
       desenhar();
     } catch (e) { aviso(`Não guardei o modelo: ${e.message}`, true); }

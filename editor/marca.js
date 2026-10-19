@@ -64,6 +64,15 @@ export function extrairKit(cena, base) {
   return { cores: coresDaCena(cena), fontes: fontesDaCena(cena, base), logos: logosDaCena(cena, base) };
 }
 
+// Passa os endereços do kit (arquivos de fonte e logos) por `f`, por exemplo para guardá-los relativos à página.
+export function mapearEnderecos(kit, f) {
+  return {
+    ...kit,
+    fontes: (kit.fontes ?? []).map((x) => (x.arquivo ? { ...x, arquivo: f(x.arquivo) } : x)),
+    logos: (kit.logos ?? []).map((x) => ({ ...x, asset: f(x.asset) })),
+  };
+}
+
 // Junta o que a peça traz ao kit já existente, sem repetir.
 export function mesclarKit(kit, novo) {
   const cores = [...kit.cores ?? []];
