@@ -186,7 +186,7 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   #proj-lista button { width: 100%; border: 0; background: none; justify-content: space-between; text-align: left; padding: 6px 8px; font-weight: 400; }
   #proj-lista button small { font: 400 11px var(--f-dado); color: var(--tinta-suave); }
   #proj-lista button[aria-current="true"] { background: var(--ouro-fundo); font-weight: 500; }
-  .proj-centro { padding: 10px 14px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; }
+  .proj-centro { padding: 10px 14px; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px; min-height: 0; }
   .proj-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
   .proj-cab h3 { margin: 0; }
   #proj-acoes-projeto { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
@@ -195,6 +195,14 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   #proj-pecas li[data-peca] { border: 1px solid var(--linha); border-radius: 8px; background: var(--mesa-2); display: grid; gap: 6px; padding: 8px; }
   #proj-pecas li.aberta { border-color: var(--ouro); }
   .proj-abrir { display: grid; gap: 2px; text-align: left; border: 0; background: none; padding: 0; justify-content: stretch; }
+  .proj-mini { display: grid; place-items: center; width: 100%; min-height: 60px; max-height: 150px; overflow: hidden; border-radius: 6px; background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 12px 12px; }
+  .proj-mini img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .proj-mini em { font: 400 11px var(--f-dado); color: var(--tinta-suave); }
+  #proj-pastas { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  #proj-pastas[hidden] { display: none; }
+  #proj-pastas .pasta { padding: 3px 10px; font-size: 12px; border-radius: 999px; }
+  #proj-pastas .pasta small { color: var(--tinta-suave); font: 400 10px var(--f-dado); }
+  #proj-pastas .pasta[aria-pressed="true"] { background: var(--ouro-fundo); border-color: var(--ouro); font-weight: 500; }
   .proj-abrir strong { font-size: 14px; }
   .proj-abrir small { font: 400 11px var(--f-dado); color: var(--tinta-suave); }
   .proj-mais { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -365,6 +373,7 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
           <button id="proj-arquivar-projeto" type="button" class="pequeno">Arquivar projeto</button>
         </div>
       </div>
+      <div id="proj-pastas"></div>
       <ul id="proj-pecas"></ul>
     </div>
   </div>

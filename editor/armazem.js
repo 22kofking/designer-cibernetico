@@ -4,7 +4,9 @@
 //
 // Coleções (cada documento é um objeto JSON com `id`):
 //   projetos     { id, nome, grupo, criado, alterado, arquivado }
-//   pecas        { id, projeto, nome, rotulo, origem, cena, formato, criado, alterado, arquivado, ultimaAutomatica }
+//   pecas        { id, projeto, pasta, nome, rotulo, origem, cena, formato, miniatura, criado, alterado, arquivado, ultimaAutomatica }
+//                `pasta` é o nome de uma pasta dentro do projeto (texto livre; vazio = fora de pastas);
+//                `miniatura` é um JPEG pequeno em data URL (cerca de 10 a 25 KB).
 //                `origem` é o endereço da cena que veio pronta (as imagens relativas resolvem a partir dele);
 //                `cena` nula quer dizer "igual à origem", sem edição guardada.
 //   versoes      { id, peca, nome, automatica, criado, cena }
@@ -106,7 +108,7 @@ export function criarArmazem(adaptador, {
     },
     // Guarda a cena editada. A cada `intervaloAutomatica` de edição, guarda também uma versão automática
     // com a cena de antes (para voltar a um ponto anterior mesmo sem ter nomeado nada).
-    async gravarCena(id, cena) {
+    async gravarCena(id, cena, { miniatura } = {}) {
       const p = await adaptador.ler('pecas', id);
       if (!p) throw new Error(`peça ${id} não existe`);
       const t = agora();
@@ -116,6 +118,15 @@ export function criarArmazem(adaptador, {
         ultimaAutomatica = t;
       }
       const novo = { ...p, cena, formato: cena?.formato ?? p.formato, alterado: t, ultimaAutomatica };
+      if (miniatura) novo.miniatura = miniatura;
+      await adaptador.gravar('pecas', id, novo);
+      return novo;
+    },
+    // A miniatura (imagem pequena em data URL) não conta como edição: `alterado` não muda.
+    async definirMiniatura(id, miniatura) {
+      const p = await adaptador.ler('pecas', id);
+      if (!p) return null;
+      const novo = { ...p, miniatura };
       await adaptador.gravar('pecas', id, novo);
       return novo;
     },
@@ -129,7 +140,7 @@ export function criarArmazem(adaptador, {
     async duplicarPeca(id, nome) {
       const p = await adaptador.ler('pecas', id);
       if (!p) throw new Error(`peça ${id} não existe`);
-      const { id: _i, criado: _c, alterado: _a, ultimaAutomatica: _u, ordem: _o, ...resto } = p;
+      const { id: _i, criado: _c, alterado: _a, ultimaAutomatica: _u, ordem: _o, ...resto } = p; // a miniatura vai junto
       return api.criarPeca({ ...resto, nome: nome ?? `${p.nome} (cópia)`, rotulo: nome ?? `${p.rotulo ?? p.nome} (cópia)` });
     },
 

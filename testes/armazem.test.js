@@ -149,3 +149,17 @@ test('espelhado: a lista vem do online e atualiza a cópia local', async () => {
   assert.deepEqual((await a.listarProjetos()).map((p) => p.nome), ['Do outro aparelho']);
   assert.equal((await local.ler('projetos', 'p1')).nome, 'Do outro aparelho');
 });
+
+test('miniatura: gravarCena e definirMiniatura guardam sem mudar a data de edição, e a cópia leva junto', async () => {
+  const agora = relogio();
+  const a = criarArmazem(adaptadorMemoria(), { agora });
+  const p = await a.criarPeca({ projeto: 'x', nome: 'banner' });
+  const g = await a.gravarCena(p.id, cena('1'), { miniatura: 'data:image/jpeg;base64,AAA' });
+  assert.equal(g.miniatura, 'data:image/jpeg;base64,AAA');
+  agora.avancar(60e3);
+  const m = await a.definirMiniatura(p.id, 'data:image/jpeg;base64,BBB');
+  assert.equal(m.alterado, g.alterado);
+  assert.equal(m.cena.nome, '1');
+  assert.equal((await a.duplicarPeca(p.id)).miniatura, 'data:image/jpeg;base64,BBB');
+  assert.equal(await a.definirMiniatura('nao-existe', 'x'), null);
+});
