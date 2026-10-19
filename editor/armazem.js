@@ -12,12 +12,13 @@
 //   versoes      { id, peca, nome, automatica, criado, cena }
 //   composicoes  { id, nome, aspecto, nos, ... }   (o formato de editor/composicoes.js)
 //   modelos      { id, nome, categoria, cena, base, formato, miniatura, criado }   (peça pronta para começar outras)
+//   preferencias { id, ... }   (por pessoa e peça de interface, como os favoritos da Biblioteca)
 //   marcas       { id, nome, cores: [{ hex, nome? }], fontes: [{ familia, peso, arquivo? }], logos: [{ nome, asset }], criado, alterado }
 //
 // Um adaptador tem quatro funções assíncronas: listar(colecao, filtro?), ler(colecao, id), gravar(colecao, id, doc),
 // apagar(colecao, id). O filtro opcional é [campo, valor] (igualdade), para não trazer a coleção inteira.
 
-export const COLECOES = ['projetos', 'pecas', 'versoes', 'composicoes', 'modelos', 'marcas'];
+export const COLECOES = ['projetos', 'pecas', 'versoes', 'composicoes', 'modelos', 'marcas', 'preferencias'];
 
 // Ids aceitos por todos os adaptadores (o banco online só aceita letras, dígitos e alguns sinais).
 export function slug(texto, reserva = 'item') {
@@ -221,6 +222,10 @@ export function criarArmazem(adaptador, {
       return novo;
     },
     apagarMarca: (id) => adaptador.apagar('marcas', id),
+
+    // ---------- preferências (favoritos e recentes da Biblioteca, por exemplo) ----------
+    lerPreferencia: (id) => adaptador.ler('preferencias', slug(id)),
+    gravarPreferencia: (id, doc) => adaptador.gravar('preferencias', slug(id), { ...doc, id: slug(id) }),
 
     // ---------- primeira abertura ----------
     // As cenas que vêm prontas com a página (window.CENAS) viram projetos e peças, uma vez.

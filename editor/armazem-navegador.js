@@ -5,10 +5,13 @@
 import { COLECOES, criarArmazem, passa } from './armazem.js';
 
 const NOME_BANCO = 'mesa-de-cena';
+// Sobe junto a cada coleção nova em COLECOES: o navegador só cria as lojas que faltam quando a versão aumenta.
+// 1: projetos, pecas, versoes, composicoes · 2: modelos, marcas · 3: preferencias
+const VERSAO_BANCO = 3;
 
 export function adaptadorIndexedDB(nome = NOME_BANCO) {
   const pronto = new Promise((ok, erro) => {
-    const pedido = indexedDB.open(nome, 1);
+    const pedido = indexedDB.open(nome, VERSAO_BANCO);
     pedido.onupgradeneeded = () => {
       for (const c of [...COLECOES, '_pendentes']) {
         if (!pedido.result.objectStoreNames.contains(c)) pedido.result.createObjectStore(c, { keyPath: 'id' });
