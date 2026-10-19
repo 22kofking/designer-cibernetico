@@ -118,10 +118,10 @@ function lerArquivo(arquivo, como) {
 
 // ---------- fontes e imagens ----------
 
-async function carregarFontes() {
-  for (const f of cena.fontes ?? []) {
+async function carregarFontes(c = cena, base = baseAssets) {
+  for (const f of c.fontes ?? []) {
     try {
-      const face = new FontFace(f.familia, `url(${new URL(f.arquivo, baseAssets)})`, { weight: String(f.peso ?? 400) });
+      const face = new FontFace(f.familia, `url(${new URL(f.arquivo, base)})`, { weight: String(f.peso ?? 400) });
       document.fonts.add(await face.load());
     } catch (e) {
       aviso(`Fonte ${f.familia} não carregou`, true);
@@ -129,8 +129,8 @@ async function carregarFontes() {
   }
 }
 
-function carregarImagem(asset) {
-  const url = new URL(asset, baseAssets).href;
+function carregarImagem(asset, base = baseAssets) {
+  const url = new URL(asset, base).href;
   if (!cacheImagens.has(url)) {
     cacheImagens.set(url, new Promise((ok, erro) => {
       const img = new Image();
@@ -1412,6 +1412,7 @@ function descarregar() {
       if (pecaAtual?.id === peca.id) {
         projetos?.aoGuardar(peca);
         if (peca.origem) $('#rascunho').hidden = false; // agora dá para voltar ao original
+        agendarMiniatura();
       }
     } catch (e) {
       marcarSalvo('erro', e.message);
@@ -1464,6 +1465,7 @@ async function abrirPeca(peca) {
   await abrir(structuredClone(json), resolver(peca.base ?? peca.origem ?? location.href), { editada: !!(peca.cena && peca.origem) });
   marcarSalvo(onde === 'online' ? 'salvo' : 'local');
   projetos?.aoAbrir(peca);
+  if (!peca.miniatura) agendarMiniatura();
 }
 
 // Peça de uma cena que veio pronta com a página (aba ou ?cena=); cria na hora se ainda não existe.
@@ -1492,13 +1494,62 @@ async function voltarAoOriginal() {
 }
 
 // Desenha a cena num canvas fora da tela, no tamanho real (para PNG e PSD).
-async function desenharFora(c, escala = 1) {
+async function desenharFora(c, escala = 1, base = baseAssets) {
   const el = document.createElement('canvas');
   const tela = new fabric.StaticCanvas(el, { width: c.formato.largura, height: c.formato.altura, enableRetinaScaling: false, renderOnAddRemove: false });
-  await montarCena(fabric, tela, c, { medidor, carregarImagem });
+  await montarCena(fabric, tela, c, { medidor, carregarImagem: (a) => carregarImagem(a, base) });
   const saida = tela.toCanvasElement(escala);
   tela.dispose();
   return saida;
+}
+
+// Miniatura da peça para a tela de Projetos: JPEG de uns 360 px de largura, desenhado fora da tela.
+async function miniaturaDe(c, base, largura = 360) {
+  await carregarFontes(c, base);
+  const el = await desenharFora(c, Math.min(1, largura / c.formato.largura), base);
+  const fundo = document.createElement('canvas');
+  fundo.width = el.width;
+  fundo.height = el.height;
+  const g = fundo.getContext('2d');
+  g.fillStyle = '#26262b';
+  g.fillRect(0, 0, fundo.width, fundo.height);
+  g.drawImage(el, 0, 0);
+  return fundo.toDataURL('image/jpeg', 0.72);
+}
+
+// Guarda a miniatura sem mexer na cena; entra na mesma fila das gravações para não pisar numa edição.
+function guardarMiniatura(id, miniatura) {
+  filaGravacao = filaGravacao.then(async () => {
+    try {
+      const p = await armazem.definirMiniatura(id, miniatura);
+      if (p && pecaAtual?.id === id) pecaAtual = { ...pecaAtual, miniatura };
+    } catch { /* a miniatura é só um enfeite: sem ela a tela mostra o formato */ }
+  });
+  return filaGravacao;
+}
+
+// Da peça aberta: pouco depois da última edição (e já na abertura, se ainda não tem).
+async function atualizarMiniaturaAtual() {
+  clearTimeout(atualizarMiniaturaAtual.t);
+  if (!armazem || !pecaAtual || !cena) return;
+  const id = pecaAtual.id;
+  try { await guardarMiniatura(id, await miniaturaDe(structuredClone(cena), baseAssets)); } catch { /* idem */ }
+}
+const agendarMiniatura = () => { clearTimeout(atualizarMiniaturaAtual.t); atualizarMiniaturaAtual.t = setTimeout(atualizarMiniaturaAtual, 4000); };
+
+// De uma peça que não está aberta (a tela de Projetos pede as que faltam, uma de cada vez).
+async function gerarMiniatura(peca) {
+  const origem = peca.origem ? resolver(peca.origem) : null;
+  let json = peca.cena;
+  if (!json) {
+    if (!origem) return null;
+    const r = await fetch(origem);
+    if (!r.ok) throw new Error(`cena ${origem.pathname} (${r.status})`);
+    json = await r.json();
+  }
+  const m = await miniaturaDe(json, resolver(peca.base ?? peca.origem ?? location.href));
+  await guardarMiniatura(peca.id, m);
+  return m;
 }
 
 async function pixelsDe(c) {
@@ -1787,6 +1838,8 @@ async function ligarArmazem() {
     pecaAtual: () => pecaAtual,
     cenaAtual: () => cena,
     descarregar,
+    atualizarMiniatura: atualizarMiniaturaAtual,
+    gerarMiniatura,
   });
 }
 

@@ -13,9 +13,9 @@ const quando = (iso) => {
     : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtual, cenaAtual, descarregar }) {
+export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtual, cenaAtual, descarregar, atualizarMiniatura = async () => {}, gerarMiniatura = async () => null }) {
   const janela = $('#janela-projetos');
-  const estado = { projeto: null, busca: '', arquivados: false };
+  const estado = { projeto: null, busca: '', arquivados: false, pasta: null }; // pasta: null = todas, '' = sem pasta
 
   const tentar = async (f, rotulo) => {
     try { return await f(); } catch (e) { aviso(`${rotulo}: ${e.message}`, true); return null; }
@@ -37,7 +37,7 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
         <span>${esc(p.nome)}${p.arquivado ? ' <small>(arquivado)</small>' : ''}</span><small>${contagem(p.id)}</small>
       </button></li>`).join('') || '<li class="dica">Nenhum projeto.</li>';
     const termo = estado.busca.trim().toLowerCase();
-    const visiveis = termo
+    let visiveis = termo
       ? pecas.filter((p) => `${p.nome} ${p.rotulo} ${projetos.find((x) => x.id === p.projeto)?.nome ?? ''}`.toLowerCase().includes(termo))
       : pecas.filter((p) => p.projeto === estado.projeto);
     const projetoAtual = projetos.find((p) => p.id === estado.projeto);
@@ -45,28 +45,110 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
     $('#proj-acoes-projeto').hidden = !!termo || !projetoAtual;
     if (projetoAtual) $('#proj-arquivar-projeto').textContent = projetoAtual.arquivado ? 'Desarquivar projeto' : 'Arquivar projeto';
     const opcoes = projetos.map((p) => `<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
-    $('#proj-pecas').innerHTML = visiveis.map((p) => {
+    // Pastas do projeto: as guardadas no projeto (podem estar vazias) mais as que as peças já usam.
+    const doProjeto = pecas.filter((p) => p.projeto === estado.projeto);
+    const pastas = [...new Set([...(projetoAtual?.pastas ?? []), ...doProjeto.map((p) => p.pasta).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+    if (estado.pasta && !pastas.includes(estado.pasta)) estado.pasta = null;
+    const barra = $('#proj-pastas');
+    barra.hidden = !!termo || !projetoAtual;
+    if (!barra.hidden) {
+      const chip = (valor, rotulo, n) => `<button type="button" class="pasta" data-pasta="${esc(valor ?? '*')}" aria-pressed="${estado.pasta === valor}">${esc(rotulo)} <small>${n}</small></button>`;
+      barra.innerHTML = chip(null, 'Todas', doProjeto.length)
+        + pastas.map((n) => chip(n, n, doProjeto.filter((p) => p.pasta === n).length)).join('')
+        + (pastas.length ? chip('', 'Sem pasta', doProjeto.filter((p) => !p.pasta).length) : '')
+        + '<button type="button" class="pasta pasta-nova" id="proj-nova-pasta">+ Pasta</button>'
+        + (estado.pasta ? '<button type="button" class="pequeno" id="proj-renomear-pasta">Renomear pasta</button><button type="button" class="pequeno" id="proj-apagar-pasta">Apagar pasta</button>' : '');
+    }
+    const naPasta = termo || estado.pasta === null ? visiveis : visiveis.filter((p) => (p.pasta ?? '') === estado.pasta);
+    const opcoesPasta = (atual) => `<option value="">Pasta…</option><option value="-">Sem pasta</option>${pastas.map((n) => `<option value="${esc(n)}"${n === atual ? ' selected' : ''}>${esc(n)}</option>`).join('')}<option value="+">Nova pasta…</option>`;
+    $('#proj-pecas').innerHTML = naPasta.map((p) => {
       const f = p.formato ?? p.cena?.formato;
       return `
       <li data-peca="${esc(p.id)}" class="${p.id === atual?.id ? 'aberta' : ''}">
         <button type="button" class="proj-abrir" title="Abrir esta peça">
+          <span class="proj-mini" style="${f ? `aspect-ratio: ${f.largura} / ${f.altura}` : ''}">${p.miniatura ? `<img src="${p.miniatura}" alt="">` : '<em>sem miniatura</em>'}</span>
           <strong>${esc(p.rotulo ?? p.nome)}</strong>
-          <small>${termo ? `${esc(projetos.find((x) => x.id === p.projeto)?.nome ?? '')} · ` : ''}${f ? `${f.largura}x${f.altura} · ` : ''}${p.cena ? (p.origem ? 'editada' : 'própria') : 'original'} · ${quando(p.alterado)}${p.arquivado ? ' · arquivada' : ''}</small>
+          <small>${termo ? `${esc(projetos.find((x) => x.id === p.projeto)?.nome ?? '')} · ` : ''}${p.pasta ? `${esc(p.pasta)} · ` : ''}${f ? `${f.largura}x${f.altura} · ` : ''}${p.cena ? (p.origem ? 'editada' : 'própria') : 'original'} · ${quando(p.alterado)}${p.arquivado ? ' · arquivada' : ''}</small>
         </button>
         <div class="proj-mais">
           <button type="button" class="pequeno proj-duplicar" title="Criar uma cópia para editar à parte">Duplicar</button>
           <button type="button" class="pequeno proj-renomear">Renomear</button>
+          <select class="proj-pasta" aria-label="Pasta da peça">${opcoesPasta(p.pasta)}</select>
           <select class="proj-mover" aria-label="Mover para o projeto"><option value="">Mover para…</option>${opcoes}</select>
           <button type="button" class="pequeno proj-arquivar">${p.arquivado ? 'Desarquivar' : 'Arquivar'}</button>
         </div>
       </li>`;
-    }).join('') || `<li class="dica">${termo ? 'Nada encontrado.' : 'Este projeto ainda não tem peças. Duplique uma peça ou abra um arquivo para começar.'}</li>`;
-    ligarPecas(visiveis);
+    }).join('') || `<li class="dica">${termo ? 'Nada encontrado.' : estado.pasta !== null ? 'Esta pasta está vazia. Escolha "Pasta…" numa peça para colocá-la aqui.' : 'Este projeto ainda não tem peças. Duplique uma peça ou abra um arquivo para começar.'}</li>`;
+    visiveis = naPasta;
+    ligarPecas(visiveis, projetoAtual, pastas);
+    gerarFaltantes(visiveis);
   }
 
-  function ligarPecas(visiveis) {
+  // Peças que ainda não têm miniatura: gera uma de cada vez e troca na tela, sem refazer a lista.
+  let gerando = false;
+  async function gerarFaltantes(lista) {
+    if (gerando) return;
+    gerando = true;
+    try {
+      for (const p of lista.filter((x) => !x.miniatura)) {
+        if (!janela.open) break;
+        let m = null;
+        try { m = await gerarMiniatura(p); } catch { /* fica sem miniatura; tenta de novo da próxima vez */ }
+        const mini = m && $(`#proj-pecas li[data-peca="${CSS.escape(p.id)}"] .proj-mini`);
+        if (mini) mini.innerHTML = `<img src="${m}" alt="">`;
+      }
+    } finally { gerando = false; }
+  }
+
+  // Muda a pasta de uma peça (nome vazio tira da pasta) e guarda a pasta no projeto, para existir mesmo vazia.
+  async function porNaPasta(peca, projeto, pasta) {
+    if (peca.id === pecaAtual()?.id) await descarregar();
+    await tentar(async () => {
+      await armazem.atualizarPeca(peca.id, { pasta: pasta || null });
+      if (pasta && projeto && !(projeto.pastas ?? []).includes(pasta)) await armazem.atualizarProjeto(projeto.id, { pastas: [...(projeto.pastas ?? []), pasta] });
+    }, 'Não mudou de pasta');
+  }
+
+  function ligarPecas(visiveis, projeto, pastas) {
+    $('#proj-pastas').querySelectorAll('button[data-pasta]').forEach((b) => {
+      b.onclick = () => { estado.pasta = b.dataset.pasta === '*' ? null : b.dataset.pasta; desenharJanela(); };
+    });
+    const nomeDePasta = (padrao = '') => {
+      const nome = prompt('Nome da pasta:', padrao)?.trim();
+      return nome || null;
+    };
+    if ($('#proj-nova-pasta')) $('#proj-nova-pasta').onclick = async () => {
+      const nome = nomeDePasta();
+      if (!nome || !projeto) return;
+      if (!pastas.includes(nome)) await tentar(() => armazem.atualizarProjeto(projeto.id, { pastas: [...(projeto.pastas ?? []), nome] }), 'Não criou a pasta');
+      estado.pasta = nome;
+      desenharJanela();
+    };
+    if ($('#proj-renomear-pasta')) $('#proj-renomear-pasta').onclick = async () => {
+      const antigo = estado.pasta;
+      const nome = nomeDePasta(antigo);
+      if (!nome || nome === antigo) return;
+      await descarregar();
+      await tentar(async () => {
+        for (const p of (await armazem.listarPecas({ projeto: projeto.id, arquivadas: true })).filter((x) => x.pasta === antigo)) await armazem.atualizarPeca(p.id, { pasta: nome });
+        await armazem.atualizarProjeto(projeto.id, { pastas: [...new Set((projeto.pastas ?? []).filter((n) => n !== antigo).concat(nome))] });
+      }, 'Não renomeou a pasta');
+      estado.pasta = nome;
+      desenharJanela();
+    };
+    if ($('#proj-apagar-pasta')) $('#proj-apagar-pasta').onclick = async () => {
+      const antigo = estado.pasta;
+      if (!confirm(`Apagar a pasta "${antigo}"? As peças ficam no projeto, só saem da pasta.`)) return;
+      await descarregar();
+      await tentar(async () => {
+        for (const p of (await armazem.listarPecas({ projeto: projeto.id, arquivadas: true })).filter((x) => x.pasta === antigo)) await armazem.atualizarPeca(p.id, { pasta: null });
+        await armazem.atualizarProjeto(projeto.id, { pastas: (projeto.pastas ?? []).filter((n) => n !== antigo) });
+      }, 'Não apagou a pasta');
+      estado.pasta = null;
+      desenharJanela();
+    };
     $('#proj-lista').querySelectorAll('button[data-projeto]').forEach((b) => {
-      b.onclick = () => { estado.projeto = b.dataset.projeto; estado.busca = ''; $('#proj-busca').value = ''; desenharJanela(); };
+      b.onclick = () => { estado.projeto = b.dataset.projeto; estado.pasta = null; estado.busca = ''; $('#proj-busca').value = ''; desenharJanela(); };
     });
     $('#proj-pecas').querySelectorAll('li[data-peca]').forEach((li) => {
       const peca = visiveis.find((p) => p.id === li.dataset.peca);
@@ -86,10 +168,17 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
         if (peca.id === pecaAtual()?.id) $('#titulo').textContent = nome.trim();
         desenharJanela();
       };
+      li.querySelector('.proj-pasta').onchange = async (e) => {
+        let pasta = e.target.value;
+        if (!pasta) return;
+        if (pasta === '+') { pasta = nomeDePasta(); if (!pasta) { desenharJanela(); return; } }
+        await porNaPasta(peca, projeto, pasta === '-' ? null : pasta);
+        desenharJanela();
+      };
       li.querySelector('.proj-mover').onchange = async (e) => {
         if (!e.target.value) return;
         if (peca.id === pecaAtual()?.id) await descarregar();
-        await tentar(() => armazem.atualizarPeca(peca.id, { projeto: e.target.value, ordem: null }), 'Não moveu');
+        await tentar(() => armazem.atualizarPeca(peca.id, { projeto: e.target.value, ordem: null, pasta: null }), 'Não moveu');
         desenharJanela();
       };
       li.querySelector('.proj-arquivar').onclick = async () => {
@@ -100,7 +189,7 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
     });
   }
 
-  $('#abrir-projetos').onclick = async () => { await descarregar(); janela.showModal(); await desenharJanela(); $('#proj-busca').focus(); };
+  $('#abrir-projetos').onclick = async () => { await descarregar(); await atualizarMiniatura(); janela.showModal(); await desenharJanela(); $('#proj-busca').focus(); };
   $('#proj-fechar').onclick = () => janela.close();
   janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); }); // clique fora fecha
   $('#proj-busca').oninput = (e) => { estado.busca = e.target.value; desenharJanela(); };
@@ -133,7 +222,7 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
     if (!nome?.trim()) return;
     const copia = await tentar(async () => {
       const c = await armazem.duplicarPeca(atual.id, nome.trim());
-      return armazem.atualizarPeca(c.id, { projeto: estado.projeto, ordem: null });
+      return armazem.atualizarPeca(c.id, { projeto: estado.projeto, ordem: null, pasta: estado.pasta || null });
     }, 'Não copiou');
     if (copia) { aviso(`"${copia.rotulo}" criada em ${$('#proj-titulo').textContent}`); desenharJanela(); }
   };
