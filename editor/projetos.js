@@ -272,6 +272,7 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
     if (v) { aviso(`Versão "${v.nome}" salva`); desenharVersoes(); }
   };
   $('#versoes').hidden = false;
+  $('#trilho-versoes').hidden = false;
   $('#abrir-projetos').hidden = false;
 
   let ultimaContagem = 0;

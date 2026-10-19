@@ -12,9 +12,12 @@ import { salvar } from './salvar.js';
 import { iniciarBiblioteca } from './biblioteca.js';
 import { abrirArmazem, guardarImagem, tirarImagensDaCena } from './armazem-navegador.js';
 import { iniciarProjetos } from './projetos.js';
+import { iniciarInterface } from './interface.js';
+import { $, esc, arred, aviso, guardar, ler, lerArquivo } from './util.js';
+import { alinharAsGuias, desenharGuiasNo } from './guias.js';
+import { acharNoEm, listaDoNoEm, idsDe } from './arvore.js';
 import { capturar, instanciar, reposicionar, caixaDoConjunto, larguraInicial, validarComposicao } from './composicoes.js';
 
-const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const params = new URLSearchParams(location.search);
 const CENAS = window.CENAS ?? null; // [{ nome, rotulo, url }] para abas
 
@@ -44,57 +47,9 @@ const ICONES = { imagem: '▣', bloco_texto: 'T', retangulo: '■', gradiente: '
 
 // ---------- utilidades ----------
 
-const esc = (t) => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const arred = (v, casas = 1) => Math.round(v * 10 ** casas) / 10 ** casas;
-
-function aviso(texto, erro = false) {
-  const el = $('#aviso');
-  el.textContent = texto;
-  el.classList.toggle('erro', erro);
-  el.classList.add('visivel');
-  clearTimeout(aviso.t);
-  aviso.t = setTimeout(() => el.classList.remove('visivel'), erro ? 6000 : 2600);
-}
-
-function guardar(chave, valor) {
-  try {
-    if (valor === null) localStorage.removeItem(chave);
-    else localStorage.setItem(chave, valor);
-    return true;
-  } catch { return false; }
-}
-function ler(chave) {
-  try { return localStorage.getItem(chave); } catch { return null; }
-}
-
-function acharNo(id, nos = cena.nos) {
-  for (const no of nos) {
-    if (no.id === id) return no;
-    if (no.filhos) {
-      const achou = acharNo(id, no.filhos);
-      if (achou) return achou;
-    }
-  }
-  return null;
-}
-
-function listaDoNo(id, nos = cena.nos) {
-  for (const no of nos) {
-    if (no.id === id) return nos;
-    if (no.filhos) {
-      const achou = listaDoNo(id, no.filhos);
-      if (achou) return achou;
-    }
-  }
-  return null;
-}
-
-function idsDaCena() {
-  const ids = new Set();
-  const andar = (nos) => nos.forEach((n) => { ids.add(n.id); if (n.filhos) andar(n.filhos); });
-  andar(cena.nos);
-  return ids;
-}
+const acharNo = (id, nos = cena.nos) => acharNoEm(nos, id);
+const listaDoNo = (id, nos = cena.nos) => listaDoNoEm(nos, id);
+const idsDaCena = () => idsDe(cena.nos);
 
 function idNovo(base) {
   const ids = idsDaCena();
@@ -104,17 +59,6 @@ function idNovo(base) {
 }
 
 const objetoDoNo = (id) => canvas.getObjects().find((o) => o.idNo === id && !o.efeitoDe);
-
-function lerArquivo(arquivo, como) {
-  return new Promise((ok, erro) => {
-    const r = new FileReader();
-    r.onload = () => ok(r.result);
-    r.onerror = () => erro(r.error);
-    if (como === 'url') r.readAsDataURL(arquivo);
-    else if (como === 'texto') r.readAsText(arquivo);
-    else r.readAsArrayBuffer(arquivo);
-  });
-}
 
 // ---------- fontes e imagens ----------
 
@@ -301,65 +245,21 @@ function aoModificar(e) {
 
 // ---------- guias magnéticas ----------
 
-function bordas(r) {
-  return { x: [r.left, r.left + r.width / 2, r.left + r.width], y: [r.top, r.top + r.height / 2, r.top + r.height] };
-}
-
 function aoMover(e) {
   acompanharCopias(e);
   guias = [];
   const alvo = e.target;
   if (!guiasLigadas || !alvo?.idNo) return;
-  const W = cena.formato.largura;
-  const H = cena.formato.altura;
-  const linhasX = [0, W / 2, W];
-  const linhasY = [0, H / 2, H];
-  for (const o of canvas.getObjects()) {
-    if (o === alvo || o.efeitoDe || !o.visible || o.idNo === alvo.idNo) continue;
-    const r = o.getBoundingRect();
-    if (r.width >= W * 0.98 && r.height >= H * 0.98) continue; // fundo inteiro só atrapalha
-    const b = bordas(r);
-    linhasX.push(...b.x);
-    linhasY.push(...b.y);
-  }
-  const limite = 7 / zoom;
-  const r = alvo.getBoundingRect();
-  const b = bordas(r);
-  const melhor = (minhas, linhas) => {
-    let m = null;
-    for (const v of minhas) for (const l of linhas) {
-      const d = l - v;
-      if (Math.abs(d) <= limite && (!m || Math.abs(d) < Math.abs(m.d))) m = { d, l };
-    }
-    return m;
-  };
-  const mx = melhor(b.x, linhasX);
-  const my = melhor(b.y, linhasY);
-  if (mx) { alvo.left += mx.d; guias.push({ x: mx.l }); }
-  if (my) { alvo.top += my.d; guias.push({ y: my.l }); }
-  if (mx || my) { alvo.setCoords(); acompanharCopias(e); }
+  const r = alinharAsGuias({ alvo, objetos: canvas.getObjects(), largura: cena.formato.largura, altura: cena.formato.altura, zoom });
+  guias = r.guias;
+  if (r.moveu) acompanharCopias(e);
 }
 
 function limparGuias() {
   if (canvas?.contextTop) canvas.clearContext(canvas.contextTop);
 }
 
-function desenharGuias() {
-  if (!guias.length || !canvas.contextTop) return;
-  const ctx = canvas.contextTop;
-  canvas.clearContext(ctx);
-  ctx.save();
-  ctx.strokeStyle = '#ff2fa8';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4, 3]);
-  for (const g of guias) {
-    ctx.beginPath();
-    if (g.x !== undefined) { ctx.moveTo(g.x * zoom + 0.5, 0); ctx.lineTo(g.x * zoom + 0.5, canvas.height); }
-    else { ctx.moveTo(0, g.y * zoom + 0.5); ctx.lineTo(canvas.width, g.y * zoom + 0.5); }
-    ctx.stroke();
-  }
-  ctx.restore();
-}
+const desenharGuias = () => desenharGuiasNo(canvas, guias, zoom);
 
 // ---------- zoom ----------
 
@@ -377,10 +277,13 @@ function aplicarZoom(novo, foco) {
   canvas.requestRenderAll();
 }
 
+let zoomAjustado = null; // zoom do último "caber"; a gaveta que abre ou fecha refaz o ajuste se a peça ainda estava assim
+
 function ajustarZoom() {
   const area = $('#area');
   const z = Math.min((area.clientWidth - 24) / cena.formato.largura, (area.clientHeight - 24) / cena.formato.altura);
   aplicarZoom(z > 0 ? z : 0.3);
+  zoomAjustado = zoom;
 }
 
 // Espaço + arrastar move a vista; Ctrl + rodinha aproxima.
@@ -1793,6 +1696,7 @@ async function iniciar() {
   });
   ligarNavegacao();
   ligarAtalhos();
+  iniciarInterface({ ler, guardar, aoMudar: () => { if (cena && zoomAjustado !== null && Math.abs(zoom - zoomAjustado) < 1e-6) ajustarZoom(); } });
   atualizarBotaoGuias();
   desenharAbas();
   const urlIndice = new URL(window.BIBLIOTECA ?? '../biblioteca/indice.json', location.href);

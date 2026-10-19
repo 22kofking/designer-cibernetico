@@ -36,11 +36,11 @@
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--fundo); color: var(--tinta); font: 14px/1.45 var(--f-texto);
-  padding-block: 12px 24px;
+  padding-block: 10px 12px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.app { max-width: 1600px; margin: 0 auto; display: grid; gap: 10px; }
+.app { max-width: 2200px; margin: 0 auto; display: grid; gap: 8px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
 h1 { font: 700 21px/1.1 var(--f-titulo); margin: 0; letter-spacing: -0.01em; }
 #titulo { font: 400 12px var(--f-dado); color: var(--tinta-suave); }
@@ -63,17 +63,44 @@ button:focus-visible, input:focus-visible, select:focus-visible, .botao:focus-wi
 .pequeno { padding: 3px 8px; font-size: 12px; }
 #rascunho { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12.5px; color: var(--tinta-suave); background: var(--ouro-fundo); border: 1px solid var(--ouro); border-radius: 8px; padding: 6px 10px; }
 #rascunho[hidden] { display: none; }
-.trabalho { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 10px; align-items: start; }
-@media (max-width: 960px) { .trabalho { grid-template-columns: minmax(0, 1fr); } }
+/* Interface em três colunas: trilho e gaveta à esquerda (Biblioteca, Composições, Versões, Histórico, Atalhos),
+   a peça no meio, e camadas e propriedades à direita. A gaveta escolhida fica guardada no navegador. */
+.trabalho { display: grid; grid-template-columns: 74px 300px minmax(0, 1fr) 330px; gap: 8px; align-items: start; --alto: max(520px, calc(100vh - 190px)); }
+.trabalho[data-gaveta="fechada"] { grid-template-columns: 74px minmax(0, 1fr) 330px; }
+.trabalho[data-gaveta="fechada"] #gaveta { display: none; }
+.trilho { display: grid; gap: 4px; align-content: start; background: var(--mesa); border: 1px solid var(--linha); border-radius: 8px; padding: 6px 4px; position: sticky; top: 8px; }
+.trilho button { flex-direction: column; gap: 1px; padding: 7px 2px; font-size: 10px; font-weight: 500; line-height: 1.15; border: 0; background: none; border-radius: 6px; color: var(--tinta-suave); justify-content: center; }
+.trilho button b { font: 400 19px/1 var(--f-texto); color: var(--tinta); }
+.trilho button:hover:not(:disabled) { background: var(--mesa-2); }
+.trilho button[aria-pressed="true"] { background: var(--ouro-fundo); color: var(--tinta); }
+#gaveta, .direita { display: grid; gap: 8px; min-width: 0; align-content: start; max-height: var(--alto); overflow: auto; }
+#gaveta > section { display: none; }
+#gaveta[data-ativo="biblioteca"] > #biblioteca, #gaveta[data-ativo="composicoes"] > #composicoes, #gaveta[data-ativo="versoes"] > #versoes:not([hidden]),
+#gaveta[data-ativo="historico"] > #painel-historico, #gaveta[data-ativo="atalhos"] > #painel-atalhos { display: block; }
+#gaveta .bib-grade { max-height: calc(var(--alto) - 190px); }
+#gaveta #versoes-lista { max-height: none; }
+#gaveta #historico { max-height: none; }
+.direita #camadas { max-height: 240px; }
+@media (max-width: 1180px) {
+  .trabalho, .trabalho[data-gaveta="fechada"] { grid-template-columns: 74px minmax(0, 1fr); --alto: none; }
+  .trabalho > .direita { grid-column: 1 / -1; }
+  .trabalho #gaveta { grid-column: 2; grid-row: 2; max-height: 60vh; }
+  .trabalho > #area { grid-column: 2; }
+}
+@media (max-width: 720px) {
+  .trabalho, .trabalho[data-gaveta="fechada"] { grid-template-columns: minmax(0, 1fr); }
+  .trilho { grid-auto-flow: column; position: static; overflow-x: auto; }
+  .trilho button { min-width: 64px; }
+  .trabalho #gaveta, .trabalho > #area, .trabalho > .direita { grid-column: 1; grid-row: auto; }
+}
 #area {
   background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 16px 16px;
   border: 1px solid var(--linha); border-radius: 8px; overflow: auto; min-width: 0;
-  height: min(76vh, 860px); padding: 12px; display: flex;
+  height: var(--alto); min-height: 360px; padding: 12px; display: flex;
 }
 #area.mao, #area.mao * { cursor: grab !important; }
 #area.soltar { outline: 2px dashed var(--ouro); outline-offset: -6px; }
 #area .canvas-container { margin: auto; flex: none; box-shadow: 0 2px 14px rgb(0 0 0 / 0.25); }
-.lateral { display: grid; gap: 10px; min-width: 0; }
 section { background: var(--mesa); border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px; min-width: 0; }
 h2 { font: 500 11px var(--f-texto); text-transform: uppercase; letter-spacing: 0.08em; color: var(--tinta-suave); margin: 0 0 8px; }
 h3 { font: 700 16px var(--f-titulo); margin: 0 0 6px; overflow-wrap: anywhere; }
@@ -273,17 +300,20 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   <div id="rascunho" hidden>Esta peça tem edições guardadas.<button id="voltar-original" type="button" class="pequeno">Voltar ao original</button></div>
   <pre id="erros"></pre>
   <div class="trabalho">
-    <div id="area"><canvas id="tela"></canvas></div>
-    <div class="lateral">
+    <nav class="trilho" aria-label="Painéis">
+      <button type="button" data-gaveta="biblioteca" title="Biblioteca: mascotes, elementos, recortes e logos"><b aria-hidden="true">▦</b>Biblioteca</button>
+      <button type="button" data-gaveta="composicoes" title="Composições salvas e seções"><b aria-hidden="true">❏</b>Composições</button>
+      <button type="button" data-gaveta="versoes" id="trilho-versoes" title="Versões da peça aberta" hidden><b aria-hidden="true">⟲</b>Versões</button>
+      <button type="button" data-gaveta="historico" title="Histórico de desfazer e refazer"><b aria-hidden="true">≡</b>Histórico</button>
+      <button type="button" data-gaveta="atalhos" title="Atalhos de teclado"><b aria-hidden="true">⌘</b>Atalhos</button>
+    </nav>
+    <aside id="gaveta" aria-label="Painel aberto">
       <section id="biblioteca" aria-label="Biblioteca">
-        <details open>
-          <summary><h2 style="display:inline">Biblioteca</h2> <span class="bib-total"></span></summary>
+        <h2 style="display:inline">Biblioteca</h2> <span class="bib-total"></span>
           <div class="bib-corpo"><p class="dica">carregando…</p></div>
-        </details>
       </section>
       <section id="composicoes" aria-label="Composições">
-        <details open>
-          <summary><h2 style="display:inline">Composições</h2></summary>
+        <h2 style="display:inline">Composições</h2>
           <div class="comp-corpo">
             <p class="dica">Junte camadas numa disposição e reutilize. Escolha várias camadas com Ctrl ou Shift + clique na lista.</p>
             <p class="dica">Escolha agora: <b id="comp-escolha"></b></p>
@@ -294,8 +324,40 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
             </div>
             <ul id="comp-lista"></ul>
           </div>
-        </details>
       </section>
+      <section id="versoes" aria-label="Versões" hidden>
+        <h2>Versões</h2>
+        <div class="botoes"><button type="button" id="versao-salvar" class="pequeno" title="Guarda a peça como está agora, com um nome">Salvar versão…</button></div>
+        <ul id="versoes-lista"></ul>
+      </section>
+      <section id="painel-historico" aria-label="Histórico">
+        <h2>Histórico</h2>
+        <ul id="historico"></ul>
+      </section>
+      <section id="painel-atalhos" aria-label="Atalhos">
+        <h2>Atalhos</h2><div>
+        <ul class="atalhos">
+          <li><kbd>Ctrl Z</kbd> desfazer</li>
+          <li><kbd>Ctrl Shift Z</kbd> refazer</li>
+          <li><kbd>Ctrl D</kbd> duplicar</li>
+          <li><kbd>Delete</kbd> excluir</li>
+          <li><kbd>Setas</kbd> mover 1 px</li>
+          <li><kbd>Shift Setas</kbd> 10 px</li>
+          <li><kbd>Ctrl ]</kbd> para frente</li>
+          <li><kbd>Ctrl [</kbd> para trás</li>
+          <li><kbd>Espaço</kbd> + arrastar: mão</li>
+          <li><kbd>Ctrl rodinha</kbd> zoom</li>
+          <li><kbd>Ctrl 0</kbd> caber</li>
+          <li><kbd>'</kbd> guias</li>
+          <li><kbd>Ctrl S</kbd> salvar cena</li>
+          <li><kbd>Esc</kbd> soltar seleção</li>
+        </ul>
+        <p class="dica">Arraste um PSD, uma imagem ou uma cena para cima da peça para abrir.</p>
+        </div>
+      </section>
+    </aside>
+    <div id="area"><canvas id="tela"></canvas></div>
+    <div class="direita">
       <section aria-label="Camadas">
         <h2>Camadas</h2>
         <div class="camada-topo">
@@ -315,36 +377,6 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
       <section aria-label="Propriedades">
         <h2>Propriedades</h2>
         <div id="propriedades"></div>
-      </section>
-      <section id="versoes" aria-label="Versões" hidden>
-        <h2>Versões</h2>
-        <div class="botoes"><button type="button" id="versao-salvar" class="pequeno" title="Guarda a peça como está agora, com um nome">Salvar versão…</button></div>
-        <ul id="versoes-lista"></ul>
-      </section>
-      <section aria-label="Histórico">
-        <h2>Histórico</h2>
-        <ul id="historico"></ul>
-      </section>
-      <section aria-label="Atalhos">
-        <details><summary><h2 style="display:inline">Atalhos</h2></summary>
-        <ul class="atalhos">
-          <li><kbd>Ctrl Z</kbd> desfazer</li>
-          <li><kbd>Ctrl Shift Z</kbd> refazer</li>
-          <li><kbd>Ctrl D</kbd> duplicar</li>
-          <li><kbd>Delete</kbd> excluir</li>
-          <li><kbd>Setas</kbd> mover 1 px</li>
-          <li><kbd>Shift Setas</kbd> 10 px</li>
-          <li><kbd>Ctrl ]</kbd> para frente</li>
-          <li><kbd>Ctrl [</kbd> para trás</li>
-          <li><kbd>Espaço</kbd> + arrastar: mão</li>
-          <li><kbd>Ctrl rodinha</kbd> zoom</li>
-          <li><kbd>Ctrl 0</kbd> caber</li>
-          <li><kbd>'</kbd> guias</li>
-          <li><kbd>Ctrl S</kbd> salvar cena</li>
-          <li><kbd>Esc</kbd> soltar seleção</li>
-        </ul>
-        <p class="dica">Arraste um PSD, uma imagem ou uma cena para cima da peça para abrir.</p>
-        </details>
       </section>
     </div>
   </div>

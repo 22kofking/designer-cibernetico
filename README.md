@@ -27,6 +27,8 @@ podem nascer separados pelo gateway e toda peça sai também em PSD com camadas,
 | Agentes | `src/agentes/`, `marcas/`, [docs/agentes.md](docs/agentes.md) | diretor reparte as partes com opções, especialistas trocam só a sua parte, crítico mede cada parte contra a referência (ΔE2000 < 10 e regras da ficha) e devolve só a que errou, bibliotecário guarda a peça aprovada |
 | Mesa de Cena | `editor/` | editor no navegador no estilo do PhotoCraft: camadas com mistura e opacidade, estilos de camada (sombra, brilho externo, contorno), ajustes de imagem, histórico, guias magnéticas, zoom, atalhos, abas por peça, PNG/WebP/JPG e PSD de ida e volta |
 | Armazém da Mesa | `editor/armazem*.js`, `editor/projetos.js` | projetos, peças, versões e composições guardados; na Mesa online, no banco dela (vale em qualquer aparelho, o Claude lê e grava) com cópia no IndexedDB do navegador; fora dele, só no IndexedDB |
+| Interface da Mesa | `editor/interface.js`, `editor/index.html` | trilho e gaveta à esquerda (Biblioteca, Composições, Versões, Histórico, Atalhos), a peça no meio, camadas e propriedades à direita; a gaveta escolhida fica guardada no navegador |
+| Módulos do editor | `editor/util.js`, `editor/guias.js`, `editor/arvore.js` | utilidades, guias magnéticas e consulta à árvore de nós, tirados do `editor.js` |
 
 ## Como usar
 
