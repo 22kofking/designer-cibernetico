@@ -76,6 +76,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, .botao:focus-wi
 #gaveta, .direita { display: grid; gap: 8px; min-width: 0; align-content: start; max-height: var(--alto); overflow: auto; }
 #gaveta > section { display: none; }
 #gaveta[data-ativo="biblioteca"] > #biblioteca, #gaveta[data-ativo="composicoes"] > #composicoes, #gaveta[data-ativo="versoes"] > #versoes:not([hidden]),
+#gaveta[data-ativo="modelos"] > #painel-modelos, #gaveta[data-ativo="marca"] > #painel-marca,
 #gaveta[data-ativo="historico"] > #painel-historico, #gaveta[data-ativo="atalhos"] > #painel-atalhos { display: block; }
 #gaveta .bib-grade { max-height: calc(var(--alto) - 190px); }
 #gaveta #versoes-lista { max-height: none; }
@@ -239,6 +240,26 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
     .proj-lado { border-right: 0; border-bottom: 1px solid var(--linha); grid-template-rows: auto auto auto; }
     #proj-lista { max-height: 140px; }
   }
+  /* Modelos e Marca (editor/modelos.js, editor/marca-painel.js) */
+  #modelos-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #modelos-lista li[data-modelo] { display: grid; gap: 4px; align-content: start; border: 1px solid var(--linha); border-radius: 8px; padding: 6px; background: var(--mesa-2); }
+  #modelos-lista li.dica { grid-column: 1 / -1; border: 0; background: none; }
+  .modelo-mini { display: grid; place-items: center; overflow: hidden; border-radius: 5px; min-height: 40px; background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 10px 10px; }
+  .modelo-mini img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .modelo-mini em { font: 400 10.5px var(--f-dado); color: var(--tinta-suave); }
+  #modelos-lista strong { font-size: 12.5px; overflow-wrap: anywhere; }
+  #modelos-lista small { font: 400 10.5px var(--f-dado); color: var(--tinta-suave); }
+  .modelo-botoes { display: flex; flex-wrap: wrap; gap: 3px; }
+  .marca-topo { display: grid; gap: 6px; }
+  #marca-corpo h4 { margin: 12px 0 4px; }
+  .kit-cores { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kit-cor { position: relative; display: inline-flex; }
+  .kit-amostra { width: 30px; height: 30px; border-radius: 6px; }
+  .kit-tirar { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; padding: 0; justify-content: center; font-size: 11px; line-height: 1; border-radius: 50%; opacity: 0; }
+  .kit-cor:hover .kit-tirar, .kit-tirar:focus-visible { opacity: 1; }
+  .kit-fontes, .kit-logos { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kit-logo { width: 84px; height: 56px; padding: 4px; justify-content: center; background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 10px 10px; }
+  .kit-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
   #versoes[hidden] { display: none; }
   #versoes-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; max-height: 200px; overflow: auto; }
   #versoes-lista li[data-versao] { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 28px; gap: 4px; align-items: center; }
@@ -303,6 +324,8 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
     <nav class="trilho" aria-label="Painéis">
       <button type="button" data-gaveta="biblioteca" title="Biblioteca: mascotes, elementos, recortes e logos"><b aria-hidden="true">▦</b>Biblioteca</button>
       <button type="button" data-gaveta="composicoes" title="Composições salvas e seções"><b aria-hidden="true">❏</b>Composições</button>
+      <button type="button" data-gaveta="modelos" id="trilho-modelos" title="Modelos: peças prontas para começar outras" hidden><b aria-hidden="true">▤</b>Modelos</button>
+      <button type="button" data-gaveta="marca" id="trilho-marca" title="Marca: cores, fontes e logos da casa" hidden><b aria-hidden="true">◍</b>Marca</button>
       <button type="button" data-gaveta="versoes" id="trilho-versoes" title="Versões da peça aberta" hidden><b aria-hidden="true">⟲</b>Versões</button>
       <button type="button" data-gaveta="historico" title="Histórico de desfazer e refazer"><b aria-hidden="true">≡</b>Histórico</button>
       <button type="button" data-gaveta="atalhos" title="Atalhos de teclado"><b aria-hidden="true">⌘</b>Atalhos</button>
@@ -324,6 +347,25 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
             </div>
             <ul id="comp-lista"></ul>
           </div>
+      </section>
+      <section id="painel-modelos" aria-label="Modelos">
+        <h2>Modelos</h2>
+        <div class="botoes"><button type="button" id="modelo-salvar" class="pequeno" title="Guarda a peça como está agora, para começar outras a partir dela">Salvar peça aberta como modelo</button></div>
+        <ul id="modelos-lista"></ul>
+      </section>
+      <section id="painel-marca" aria-label="Marca">
+        <h2>Marca</h2>
+        <div class="marca-topo">
+          <select id="marca-sel" aria-label="Marca"></select>
+          <div class="botoes">
+            <button type="button" id="marca-nova" class="pequeno" title="Cria um kit com as cores, fontes e logos da peça aberta">+ Kit da peça aberta</button>
+            <button type="button" id="marca-atualizar" class="pequeno" title="Soma ao kit o que a peça aberta traz">Somar a peça aberta</button>
+            <label class="botao pequeno" title="Acrescentar uma cor ao kit">+ Cor<input id="marca-nova-cor" type="color" value="#f5c400" style="display:block;width:0;height:0;padding:0;border:0"></label>
+            <button type="button" id="marca-renomear" class="pequeno">Renomear</button>
+            <button type="button" id="marca-apagar" class="pequeno">Apagar kit</button>
+          </div>
+        </div>
+        <div id="marca-corpo"></div>
       </section>
       <section id="versoes" aria-label="Versões" hidden>
         <h2>Versões</h2>

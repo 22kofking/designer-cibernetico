@@ -11,11 +11,13 @@
 //                `cena` nula quer dizer "igual à origem", sem edição guardada.
 //   versoes      { id, peca, nome, automatica, criado, cena }
 //   composicoes  { id, nome, aspecto, nos, ... }   (o formato de editor/composicoes.js)
+//   modelos      { id, nome, categoria, cena, base, formato, miniatura, criado }   (peça pronta para começar outras)
+//   marcas       { id, nome, cores: [{ hex, nome? }], fontes: [{ familia, peso, arquivo? }], logos: [{ nome, asset }], criado, alterado }
 //
 // Um adaptador tem quatro funções assíncronas: listar(colecao, filtro?), ler(colecao, id), gravar(colecao, id, doc),
 // apagar(colecao, id). O filtro opcional é [campo, valor] (igualdade), para não trazer a coleção inteira.
 
-export const COLECOES = ['projetos', 'pecas', 'versoes', 'composicoes'];
+export const COLECOES = ['projetos', 'pecas', 'versoes', 'composicoes', 'modelos', 'marcas'];
 
 // Ids aceitos por todos os adaptadores (o banco online só aceita letras, dígitos e alguns sinais).
 export function slug(texto, reserva = 'item') {
@@ -177,6 +179,48 @@ export function criarArmazem(adaptador, {
     async listarComposicoes() { return (await adaptador.listar('composicoes')).sort(porNome); },
     gravarComposicao: (comp) => adaptador.gravar('composicoes', slug(comp.id), { ...comp, id: slug(comp.id) }),
     apagarComposicao: (id) => adaptador.apagar('composicoes', slug(id)),
+
+    // ---------- modelos ----------
+    async listarModelos() { return (await adaptador.listar('modelos')).sort(porNome); },
+    lerModelo: (id) => adaptador.ler('modelos', id),
+    // `base` é o endereço a partir do qual as imagens relativas da cena resolvem.
+    async salvarModelo({ nome, categoria = null, cena, base = null, miniatura = null }) {
+      const id = await idLivre('modelos', nome);
+      const m = { id, nome, categoria, cena: structuredClone(cena), base, formato: cena?.formato ?? null, miniatura, criado: agora() };
+      await adaptador.gravar('modelos', id, m);
+      return m;
+    },
+    async atualizarModelo(id, campos) {
+      const m = await adaptador.ler('modelos', id);
+      if (!m) throw new Error('modelo não encontrado');
+      const novo = { ...m, ...campos, id };
+      await adaptador.gravar('modelos', id, novo);
+      return novo;
+    },
+    apagarModelo: (id) => adaptador.apagar('modelos', id),
+    // Uma peça nova, própria (sem original), com a cena do modelo.
+    async criarPecaDeModelo(idModelo, { projeto, nome } = {}) {
+      const m = await adaptador.ler('modelos', idModelo);
+      if (!m) throw new Error('modelo não encontrado');
+      return api.criarPeca({ projeto, nome: nome ?? m.nome, cena: structuredClone(m.cena), base: m.base, miniatura: m.miniatura });
+    },
+
+    // ---------- marcas (kit: cores, fontes e logos) ----------
+    async listarMarcas() { return (await adaptador.listar('marcas')).sort(porNome); },
+    async criarMarca(nome, kit = {}) {
+      const id = await idLivre('marcas', nome);
+      const m = { cores: [], fontes: [], logos: [], ...kit, id, nome, criado: agora(), alterado: agora() };
+      await adaptador.gravar('marcas', id, m);
+      return m;
+    },
+    async atualizarMarca(id, campos) {
+      const m = await adaptador.ler('marcas', id);
+      if (!m) throw new Error('marca não encontrada');
+      const novo = { ...m, ...campos, id, alterado: agora() };
+      await adaptador.gravar('marcas', id, novo);
+      return novo;
+    },
+    apagarMarca: (id) => adaptador.apagar('marcas', id),
 
     // ---------- primeira abertura ----------
     // As cenas que vêm prontas com a página (window.CENAS) viram projetos e peças, uma vez.
