@@ -26,6 +26,7 @@ podem nascer separados pelo gateway e toda peça sai também em PSD com camadas,
 | Mascote | `src/mascote/`, `personagens/`, [docs/mascote.md](docs/mascote.md) | ficha do personagem (prompt, figurinos, temas, folha), conferência "parece o personagem e não é infantil", separação em partes por pontos (SlimSAM em CPU) com QA do recorte e remendo, fundo tirado com BiRefNet, troca de parte na cena |
 | Agentes | `src/agentes/`, `marcas/`, [docs/agentes.md](docs/agentes.md) | diretor reparte as partes com opções, especialistas trocam só a sua parte, crítico mede cada parte contra a referência (ΔE2000 < 10 e regras da ficha) e devolve só a que errou, bibliotecário guarda a peça aprovada |
 | Mesa de Cena | `editor/` | editor no navegador no estilo do PhotoCraft: camadas com mistura e opacidade, estilos de camada (sombra, brilho externo, contorno), ajustes de imagem, histórico, guias magnéticas, zoom, atalhos, abas por peça, PNG/WebP/JPG e PSD de ida e volta |
+| Armazém da Mesa | `editor/armazem*.js`, `editor/projetos.js` | projetos, peças, versões e composições guardados; na Mesa online, no banco dela (vale em qualquer aparelho, o Claude lê e grava) com cópia no IndexedDB do navegador; fora dele, só no IndexedDB |
 
 ## Como usar
 
