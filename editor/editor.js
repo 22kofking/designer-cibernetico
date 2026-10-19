@@ -1333,6 +1333,7 @@ function descarregar() {
 window.addEventListener('pagehide', () => { descarregar(); });
 
 let onde = 'nenhum'; // 'online', 'navegador' ou 'nenhum'
+const paineisDoArmazem = []; // atualizadores dos painéis Modelos e Marca, para depois de importar um backup
 
 async function abrir(json, base, { editada = false, rascunhoAntigo = false } = {}) {
   cena = json;
@@ -1775,8 +1776,11 @@ async function ligarArmazem() {
     descarregar,
     atualizarMiniatura: atualizarMiniaturaAtual,
     gerarMiniatura,
+    baixar: salvar,
+    lerTexto: (arquivo) => lerArquivo(arquivo, 'texto'),
+    aoImportar: () => { carregarComposicoes(); for (const atualizar of paineisDoArmazem) atualizar(); },
   });
-  iniciarModelos({
+  const modelos = iniciarModelos({
     paraRelativo, armazem, aviso, esc,
     cenaAtual: () => cena,
     baseAtual: () => baseAssets,
@@ -1795,6 +1799,7 @@ async function ligarArmazem() {
     aplicarFonte: aplicarFonteDaMarca,
     colocarLogo: colocarLogoDaMarca,
   });
+  paineisDoArmazem.push(modelos.atualizar, marca.atualizar);
   $('#trilho-modelos').hidden = false;
   $('#trilho-marca').hidden = false;
   semearMarcas(cenas).then(() => marca.atualizar()); // em segundo plano: não segura a abertura da peça

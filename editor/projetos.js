@@ -13,7 +13,7 @@ const quando = (iso) => {
     : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtual, cenaAtual, descarregar, atualizarMiniatura = async () => {}, gerarMiniatura = async () => null }) {
+export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtual, cenaAtual, descarregar, atualizarMiniatura = async () => {}, gerarMiniatura = async () => null, baixar = null, lerTexto = null, aoImportar = () => {} }) {
   const janela = $('#janela-projetos');
   const estado = { projeto: null, busca: '', arquivados: false, pasta: null }; // pasta: null = todas, '' = sem pasta
 
@@ -194,6 +194,31 @@ export function iniciarProjetos({ armazem, onde, aviso, esc, abrirPeca, pecaAtua
   janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); }); // clique fora fecha
   $('#proj-busca').oninput = (e) => { estado.busca = e.target.value; desenharJanela(); };
   $('#proj-arquivados').onchange = (e) => { estado.arquivados = e.target.checked; desenharJanela(); };
+  // Backup: tudo que o Armazém guarda, num arquivo .json (e de volta, juntando ao que já existe).
+  $('#proj-exportar').hidden = !baixar;
+  $('#proj-importar-rotulo').hidden = !lerTexto;
+  $('#proj-exportar').onclick = async () => {
+    try {
+      await descarregar();
+      const dados = await armazem.exportarTudo();
+      const total = Object.values(dados.colecoes).reduce((s, l) => s + l.length, 0);
+      const nome = `mesa-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const r = await baixar(nome, new Blob([JSON.stringify(dados)], { type: 'application/json' }));
+      if (r === 'salvo' || r === 'baixado') aviso(`Backup pronto: ${total} itens em ${nome}`);
+    } catch (e) { aviso(`Não deu para exportar: ${e.message}`, true); }
+  };
+  $('#proj-importar').onchange = async (e) => {
+    const arquivo = e.target.files[0];
+    e.target.value = '';
+    if (!arquivo) return;
+    try {
+      const r = await armazem.importarTudo(JSON.parse(await lerTexto(arquivo)));
+      const soma = (k) => Object.values(r).reduce((s, x) => s + x[k], 0);
+      aviso(`Backup importado: ${soma('novos')} novos, ${soma('atualizados')} atualizados, ${soma('ignorados')} já estavam aqui`);
+      aoImportar();
+      desenharJanela();
+    } catch (erro) { aviso(`Não consegui importar: ${erro.message}`, true); }
+  };
   $('#proj-novo').onclick = async () => {
     const nome = prompt('Nome do projeto (uma marca, uma campanha):');
     if (!nome?.trim()) return;
