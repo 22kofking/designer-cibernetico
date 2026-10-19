@@ -169,6 +169,48 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   .bib-mais { justify-self: center; }
   .bib-mais[hidden] { display: none; }
   .bib-dica { margin: 0; }
+  /* Projetos e versões (editor/projetos.js) */
+  #salvo { font: 400 12px var(--f-dado); color: var(--tinta-suave); margin-left: auto; }
+  #salvo[data-estado="guardando"] { color: var(--ouro); }
+  #salvo[data-estado="erro"] { color: var(--erro); }
+  #abrir-projetos { font-weight: 600; }
+  #janela-projetos { width: min(980px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 32px)); padding: 0; border: 1px solid var(--linha); border-radius: 12px; background: var(--mesa); color: var(--tinta); }
+  #janela-projetos::backdrop { background: rgb(0 0 0 / 0.45); }
+  .proj { display: grid; grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: min(680px, calc(100vh - 40px)); }
+  .proj-topo { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--linha); }
+  .proj-topo h2 { margin: 0; font: 700 18px var(--f-titulo); text-transform: none; letter-spacing: 0; color: var(--tinta); }
+  #proj-busca { flex: 1 1 200px; padding: 6px 10px; }
+  #proj-onde { flex-basis: 100%; margin: 0; }
+  .proj-lado { border-right: 1px solid var(--linha); padding: 10px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; min-height: 0; }
+  #proj-lista { list-style: none; margin: 0; padding: 0; overflow: auto; display: grid; gap: 2px; align-content: start; }
+  #proj-lista button { width: 100%; border: 0; background: none; justify-content: space-between; text-align: left; padding: 6px 8px; font-weight: 400; }
+  #proj-lista button small { font: 400 11px var(--f-dado); color: var(--tinta-suave); }
+  #proj-lista button[aria-current="true"] { background: var(--ouro-fundo); font-weight: 500; }
+  .proj-centro { padding: 10px 14px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; }
+  .proj-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .proj-cab h3 { margin: 0; }
+  #proj-acoes-projeto { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+  #proj-acoes-projeto[hidden] { display: none; }
+  #proj-pecas { list-style: none; margin: 0; padding: 0; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; align-content: start; }
+  #proj-pecas li[data-peca] { border: 1px solid var(--linha); border-radius: 8px; background: var(--mesa-2); display: grid; gap: 6px; padding: 8px; }
+  #proj-pecas li.aberta { border-color: var(--ouro); }
+  .proj-abrir { display: grid; gap: 2px; text-align: left; border: 0; background: none; padding: 0; justify-content: stretch; }
+  .proj-abrir strong { font-size: 14px; }
+  .proj-abrir small { font: 400 11px var(--f-dado); color: var(--tinta-suave); }
+  .proj-mais { display: flex; flex-wrap: wrap; gap: 4px; }
+  .proj-mais select { font-size: 12px; padding: 2px 4px; }
+  @media (max-width: 720px) {
+    .proj { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); height: calc(100vh - 40px); }
+    .proj-lado { border-right: 0; border-bottom: 1px solid var(--linha); grid-template-rows: auto auto auto; }
+    #proj-lista { max-height: 140px; }
+  }
+  #versoes[hidden] { display: none; }
+  #versoes-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; max-height: 200px; overflow: auto; }
+  #versoes-lista li[data-versao] { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 28px; gap: 4px; align-items: center; }
+  #versoes-lista li span { display: grid; min-width: 0; }
+  #versoes-lista li strong { font-weight: 500; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #versoes-lista li small { font: 400 10.5px var(--f-dado); color: var(--tinta-suave); }
+  #versoes-lista .ver-apagar { justify-content: center; padding: 2px; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -181,7 +223,9 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
 <div class="app">
   <header>
     <h1>Mesa de Cena</h1>
+    <button id="abrir-projetos" type="button" title="Projetos e peças guardados" hidden>Projetos</button>
     <span id="titulo">carregando…</span>
+    <span id="salvo" role="status"></span>
   </header>
   <nav id="abas" role="tablist" aria-label="Peças" hidden></nav>
   <div class="ferramentas" role="toolbar" aria-label="Ferramentas">
@@ -218,7 +262,7 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
       <button id="exportar" type="button">Exportar</button>
     </div>
   </div>
-  <div id="rascunho" hidden>Você está vendo as suas edições guardadas neste navegador.<button id="voltar-original" type="button" class="pequeno">Voltar ao original</button></div>
+  <div id="rascunho" hidden>Esta peça tem edições guardadas.<button id="voltar-original" type="button" class="pequeno">Voltar ao original</button></div>
   <pre id="erros"></pre>
   <div class="trabalho">
     <div id="area"><canvas id="tela"></canvas></div>
@@ -264,6 +308,11 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
         <h2>Propriedades</h2>
         <div id="propriedades"></div>
       </section>
+      <section id="versoes" aria-label="Versões" hidden>
+        <h2>Versões</h2>
+        <div class="botoes"><button type="button" id="versao-salvar" class="pequeno" title="Guarda a peça como está agora, com um nome">Salvar versão…</button></div>
+        <ul id="versoes-lista"></ul>
+      </section>
       <section aria-label="Histórico">
         <h2>Histórico</h2>
         <ul id="historico"></ul>
@@ -293,6 +342,33 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   </div>
 </div>
 <div id="aviso" role="status" aria-live="polite"></div>
+<dialog id="janela-projetos" aria-labelledby="proj-nome">
+  <div class="proj">
+    <div class="proj-topo">
+      <h2 id="proj-nome">Projetos</h2>
+      <input id="proj-busca" type="search" placeholder="Buscar peça em todos os projetos" aria-label="Buscar peça">
+      <label class="chk"><input id="proj-arquivados" type="checkbox"> Mostrar arquivados</label>
+      <button id="proj-fechar" type="button" aria-label="Fechar">Fechar</button>
+      <p id="proj-onde" class="dica"></p>
+    </div>
+    <div class="proj-lado">
+      <button id="proj-novo" type="button">+ Novo projeto</button>
+      <ul id="proj-lista"></ul>
+      <p class="dica">Abrir um .json ou PSD pelo botão Abrir cria uma peça em "Peças avulsas".</p>
+    </div>
+    <div class="proj-centro">
+      <div class="proj-cab">
+        <h3 id="proj-titulo"></h3>
+        <div id="proj-acoes-projeto">
+          <button id="proj-copiar-aqui" type="button" class="pequeno" title="Cria aqui uma cópia da peça aberta agora">+ Cópia da peça aberta</button>
+          <button id="proj-renomear-projeto" type="button" class="pequeno">Renomear projeto</button>
+          <button id="proj-arquivar-projeto" type="button" class="pequeno">Arquivar projeto</button>
+        </div>
+      </div>
+      <ul id="proj-pecas"></ul>
+    </div>
+  </div>
+</dialog>
 <script>window.CENA_PADRAO = window.CENA_PADRAO ?? '../exemplos/capivara362-home-vip/cena.json';</script>
 <script type="module" src="editor.js"></script>
 </body>

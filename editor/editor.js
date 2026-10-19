@@ -10,6 +10,8 @@ import { criarMedidor, montarCena, MISTURAS } from '../src/nucleo/render.js';
 import { abrirPsd, exportarPsd } from './psd-navegador.js';
 import { salvar } from './salvar.js';
 import { iniciarBiblioteca } from './biblioteca.js';
+import { abrirArmazem, guardarImagem, tirarImagensDaCena } from './armazem-navegador.js';
+import { iniciarProjetos } from './projetos.js';
 import { capturar, instanciar, reposicionar, caixaDoConjunto, larguraInicial, validarComposicao } from './composicoes.js';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
@@ -19,6 +21,9 @@ const CENAS = window.CENAS ?? null; // [{ nome, rotulo, url }] para abas
 let cena;
 let urlCena;
 let baseAssets;
+let armazem = null; // projetos, peças, versões e composições (editor/armazem.js)
+let pecaAtual = null; // peça aberta no armazém; null para cena sem peça (armazém indisponível)
+let projetos = null; // janela de Projetos e painel de Versões (editor/projetos.js)
 let canvas;
 let selecionado = null;
 let redesenhando = false;
@@ -148,7 +153,7 @@ function registrar(rotulo) {
   historico.passos.push({ rotulo, foto, hora: new Date() });
   if (historico.passos.length > 80) historico.passos.shift();
   historico.i = historico.passos.length - 1;
-  if (historico.passos.length > 1) guardar(chaveRascunho(), foto);
+  if (historico.passos.length > 1) guardarCena(foto);
   desenharHistorico();
 }
 
@@ -163,7 +168,7 @@ async function irParaPasso(i) {
   historico.i = i;
   cena = JSON.parse(historico.passos[i].foto);
   if (selecionado && !acharNo(selecionado)) selecionado = null;
-  guardar(chaveRascunho(), historico.passos[i].foto);
+  guardarCena(historico.passos[i].foto);
   await carregarFontes();
   await redesenhar();
   mostrarPropriedades();
@@ -562,8 +567,10 @@ async function colocarImagem(asset, nome, origem) {
   }, `Colocar ${nome}`);
 }
 
+// Na Mesa online a imagem vai para o depósito dela; fora dele, fica dentro da cena.
 async function novaImagem(arquivo) {
-  await colocarImagem(await lerArquivo(arquivo, 'url'), arquivo.name, `colocada na Mesa (${arquivo.name})`);
+  const { asset } = await guardarImagem(arquivo, (a) => lerArquivo(a, 'url'));
+  await colocarImagem(asset, arquivo.name, `colocada na Mesa (${arquivo.name})`);
 }
 
 // Item da biblioteca: clique coloca como camada nova; Shift+clique troca a imagem da camada de imagem selecionada
@@ -613,15 +620,22 @@ function excluir() {
 
 
 // ---------- composições e seções ----------
-// Composição: camadas numa disposição espacial, guardadas para reutilizar (neste navegador e em arquivo .json).
+// Composição: camadas numa disposição espacial, guardadas para reutilizar (no Armazém e em arquivo .json).
 // Seção: as camadas que vieram de uma composição ficam marcadas (campo "secao") e se movem e escalam juntas.
 
 const CHAVE_COMPOSICOES = 'mesa:composicoes:v1';
 
 let predefinidas = []; // composições que vêm prontas com a biblioteca (biblioteca/composicoes.json)
+let minhas = []; // as do usuário, lidas do Armazém (sem armazém, do localStorage como antes)
 
-function lerComposicoes() {
+const composicoesAntigas = () => {
   try { return JSON.parse(ler(CHAVE_COMPOSICOES) ?? '[]').filter((c) => !validarComposicao(c)); } catch { return []; }
+};
+const lerComposicoes = () => minhas;
+
+async function carregarComposicoes() {
+  minhas = armazem ? (await armazem.listarComposicoes()).filter((c) => !validarComposicao(c)) : composicoesAntigas();
+  desenharComposicoes();
 }
 
 async function carregarPredefinidas(urlBiblioteca) {
@@ -637,8 +651,20 @@ async function carregarPredefinidas(urlBiblioteca) {
   desenharComposicoes();
 }
 
-function gravarComposicoes(lista) {
-  if (!guardar(CHAVE_COMPOSICOES, JSON.stringify(lista))) aviso('Não consegui guardar neste navegador (cheio?). Use Exportar para ficar com o arquivo.', true);
+// Grava uma composição (ou apaga, com `apagar`) e atualiza a lista.
+async function gravarComposicao(comp, { apagar = false } = {}) {
+  try {
+    if (armazem) {
+      if (apagar) await armazem.apagarComposicao(comp.id); else await armazem.gravarComposicao(comp);
+    } else {
+      const lista = composicoesAntigas().filter((c) => c.id !== comp.id);
+      if (!apagar) lista.push(comp);
+      if (!guardar(CHAVE_COMPOSICOES, JSON.stringify(lista))) throw new Error('o navegador está cheio; use Exportar para ficar com o arquivo');
+    }
+  } catch (e) {
+    aviso(`Não consegui guardar a composição: ${e.message}`, true);
+  }
+  await carregarComposicoes();
 }
 
 function nosParaComposicao() {
@@ -673,8 +699,7 @@ function desenharComposicoes() {
     const apagar = li.querySelector('.comp-apagar');
     if (apagar) apagar.onclick = () => {
       if (!confirm(`Apagar a composição "${c.nome}"?`)) return;
-      gravarComposicoes(lerComposicoes().filter((x) => x.id !== c.id));
-      desenharComposicoes();
+      gravarComposicao(c, { apagar: true });
     };
   });
 }
@@ -685,13 +710,9 @@ function salvarComposicao(nos, nomeSugerido) {
   if (!nome) return;
   let comp;
   try { comp = capturar(nos, cena.formato, nome); } catch (e) { aviso(e.message, true); return; }
-  const lista = lerComposicoes();
-  const i = lista.findIndex((c) => c.id === comp.id);
-  if (i >= 0 && !confirm(`Já existe "${lista[i].nome}". Substituir?`)) return;
-  if (i >= 0) lista[i] = comp; else lista.push(comp);
-  gravarComposicoes(lista);
-  aviso(`Composição "${nome}" guardada (${comp.nos.length} camadas)`);
-  desenharComposicoes();
+  const existente = lerComposicoes().find((c) => c.id === comp.id);
+  if (existente && !confirm(`Já existe "${existente.nome}". Substituir?`)) return;
+  gravarComposicao(comp).then(() => aviso(`Composição "${nome}" guardada (${comp.nos.length} camadas)`));
 }
 
 async function colocarComposicao(comp) {
@@ -741,8 +762,7 @@ async function importarComposicoes(arquivos) {
       for (const comp of Array.isArray(lido) ? lido : [lido]) {
         const erro = validarComposicao(comp);
         if (erro) { aviso(`${arq.name}: ${erro}`, true); continue; }
-        const lista = lerComposicoes().filter((c) => c.id !== comp.id);
-        gravarComposicoes([...lista, comp]);
+        await gravarComposicao(comp);
         n++;
       }
     } catch (e) { aviso(`${arq.name}: ${e.message}`, true); }
@@ -1350,28 +1370,74 @@ function ligarEfeitos(painel, no) {
   }
 }
 
-// ---------- abrir, salvar e exportar ----------
+// ---------- abrir, guardar e exportar ----------
+// Toda cena aberta é uma peça do Armazém (editor/armazem.js): cada edição fica guardada na peça, no
+// navegador e, na Mesa online, no banco dela. Sem armazém (navegador sem IndexedDB), a edição fica
+// como rascunho no localStorage, como antes.
 
-function chaveRascunho() {
-  return `mesa:rascunho:v2:${urlCena?.href ?? cena?.nome ?? 'cena'}`;
+const chaveRascunhoAntigo = (url) => `mesa:rascunho:v2:${url}`;
+let aGravar = null; // { id, foto } esperando a pessoa parar de mexer
+let filaGravacao = Promise.resolve();
+
+function marcarSalvo(estado, detalhe = '') {
+  const el = $('#salvo');
+  if (!el) return;
+  el.dataset.estado = estado;
+  el.textContent = { guardando: 'Guardando…', salvo: `Salvo${detalhe}`, erro: 'Não salvou', local: 'Salvo só neste navegador' }[estado] ?? '';
+  el.title = estado === 'erro' ? detalhe : '';
 }
 
-async function abrir(json, base, { rascunho = true } = {}) {
+function guardarCena(foto) {
+  if (!armazem || !pecaAtual) {
+    guardar(chaveRascunhoAntigo(urlCena?.href ?? cena?.nome ?? 'cena'), foto);
+    return;
+  }
+  aGravar = { id: pecaAtual.id, foto };
+  marcarSalvo('guardando');
+  clearTimeout(guardarCena.t);
+  guardarCena.t = setTimeout(descarregar, 700);
+}
+
+// Grava já o que está esperando (antes de trocar de peça, por exemplo).
+function descarregar() {
+  clearTimeout(guardarCena.t);
+  const pedido = aGravar;
+  aGravar = null;
+  if (!pedido) return filaGravacao;
+  filaGravacao = filaGravacao.then(async () => {
+    try {
+      const peca = await armazem.gravarCena(pedido.id, JSON.parse(pedido.foto));
+      if (pecaAtual?.id === peca.id) pecaAtual = peca;
+      if (!aGravar) marcarSalvo('salvo', onde === 'online' ? '' : ' neste navegador');
+      if (pecaAtual?.id === peca.id) {
+        projetos?.aoGuardar(peca);
+        if (peca.origem) $('#rascunho').hidden = false; // agora dá para voltar ao original
+      }
+    } catch (e) {
+      marcarSalvo('erro', e.message);
+      aviso(`Não consegui guardar a peça: ${e.message}`, true);
+    }
+  });
+  return filaGravacao;
+}
+window.addEventListener('pagehide', () => { descarregar(); });
+
+let onde = 'nenhum'; // 'online', 'navegador' ou 'nenhum'
+
+async function abrir(json, base, { editada = false, rascunhoAntigo = false } = {}) {
   cena = json;
   baseAssets = base;
   selecionado = null;
   marcadas.clear();
   historico.passos = [];
   historico.i = -1;
-  const salvo = rascunho ? ler(chaveRascunho()) : null;
-  $('#rascunho').hidden = true;
-  if (salvo) {
-    try {
-      cena = JSON.parse(salvo);
-      $('#rascunho').hidden = false;
-    } catch { guardar(chaveRascunho(), null); }
+  let salvo = null;
+  if (rascunhoAntigo) {
+    try { salvo = JSON.parse(ler(chaveRascunhoAntigo(urlCena?.href)) ?? 'null'); } catch { salvo = null; }
+    if (salvo) cena = salvo;
   }
-  $('#titulo').textContent = cena.nome ?? 'cena';
+  $('#rascunho').hidden = !(editada || salvo);
+  $('#titulo').textContent = pecaAtual ? `${pecaAtual.rotulo ?? pecaAtual.nome}` : (cena.nome ?? 'cena');
   await carregarFontes();
   ajustarZoom();
   await redesenhar();
@@ -1379,10 +1445,49 @@ async function abrir(json, base, { rascunho = true } = {}) {
   registrar(salvo ? 'Rascunho restaurado' : 'Abrir');
 }
 
+const resolver = (endereco) => new URL(endereco, location.href);
+
+async function abrirPeca(peca) {
+  await descarregar();
+  let json = peca.cena;
+  const origem = peca.origem ? resolver(peca.origem) : null;
+  if (!json) {
+    if (!origem) throw new Error(`a peça ${peca.nome} está vazia`);
+    const r = await fetch(origem);
+    if (!r.ok) throw new Error(`não achei a cena ${origem.pathname} (${r.status})`);
+    json = await r.json();
+  }
+  pecaAtual = peca;
+  urlCena = origem ?? new URL(`peca:${peca.id}`);
+  guardar('mesa:peca', peca.id);
+  desenharAbas();
+  await abrir(structuredClone(json), resolver(peca.base ?? peca.origem ?? location.href), { editada: !!(peca.cena && peca.origem) });
+  marcarSalvo(onde === 'online' ? 'salvo' : 'local');
+  projetos?.aoAbrir(peca);
+}
+
+// Peça de uma cena que veio pronta com a página (aba ou ?cena=); cria na hora se ainda não existe.
+async function pecaDaOrigem(origem, rotulo) {
+  return (await armazem.pecaPelaOrigem(origem))
+    ?? armazem.criarPeca({ projeto: (await projetoAvulsas()).id, nome: rotulo ?? origem.split('/').slice(-2, -1)[0] ?? 'peça', origem });
+}
+
+// Cenas e PSD abertos do computador, e cenas avulsas, ficam no projeto "Peças avulsas".
+async function projetoAvulsas() {
+  const p = (await armazem.listarProjetos({ arquivados: true })).find((x) => x.id === 'pecas-avulsas');
+  return p ?? armazem.criarProjeto('Peças avulsas');
+}
+
 async function voltarAoOriginal() {
-  guardar(chaveRascunho(), null);
+  if (armazem && pecaAtual?.origem) {
+    await descarregar();
+    await abrirPeca(await armazem.voltarAoOriginal(pecaAtual.id));
+    aviso('Voltou ao original; a edição ficou guardada em Versões');
+    return;
+  }
+  guardar(chaveRascunhoAntigo(urlCena?.href), null);
   const resposta = await fetch(urlCena);
-  await abrir(await resposta.json(), urlCena, { rascunho: false });
+  await abrir(await resposta.json(), urlCena);
   aviso('Voltou à versão original da cena');
 }
 
@@ -1435,22 +1540,33 @@ async function exportar(formato) {
 
 async function abrirArquivo(arquivo) {
   try {
-    // Cena ou PSD aberto do computador: rascunho próprio, sem aba marcada.
-    if (/\.(json|psd|psb)$/i.test(arquivo.name)) {
-      urlCena = new URL(`arquivo:${encodeURIComponent(arquivo.name)}`);
-      desenharAbas();
-    }
+    let json = null;
     if (/\.json$/i.test(arquivo.name)) {
-      await abrir(JSON.parse(await lerArquivo(arquivo, 'texto')), baseAssets, { rascunho: false });
+      json = JSON.parse(await lerArquivo(arquivo, 'texto'));
     } else if (/\.(psd|psb)$/i.test(arquivo.name)) {
       aviso('Abrindo o PSD…');
-      await abrir(await abrirPsd(await lerArquivo(arquivo, 'buffer'), arquivo.name), baseAssets, { rascunho: false });
-      aviso(`${cena.nos.length} camadas abertas do PSD`);
+      json = await abrirPsd(await lerArquivo(arquivo, 'buffer'), arquivo.name);
     } else if (/^image\//.test(arquivo.type)) {
       await novaImagem(arquivo);
+      return;
     } else {
       aviso('Abro cena (.json), PSD ou imagem', true);
+      return;
     }
+    // Cena ou PSD do computador vira uma peça nova em "Peças avulsas".
+    if (!armazem) {
+      urlCena = new URL(`arquivo:${encodeURIComponent(arquivo.name)}`);
+      desenharAbas();
+      await abrir(json, baseAssets);
+    } else {
+      await tirarImagensDaCena(json);
+      const peca = await armazem.criarPeca({
+        projeto: (await projetoAvulsas()).id, nome: arquivo.name.replace(/\.[^.]+$/, ''), cena: json, base: baseAssets.href,
+      });
+      await abrirPeca(peca);
+      projetos?.atualizar();
+    }
+    if (/\.(psd|psb)$/i.test(arquivo.name)) aviso(`${cena.nos.length} camadas abertas do PSD`);
   } catch (e) {
     aviso(`Não abriu ${arquivo.name}: ${e.message}`, true);
   }
@@ -1507,18 +1623,23 @@ const grupoDe = (c) => c.grupo ?? '';
 const NOMES_GRUPO = window.GRUPOS_CENAS ?? {};
 
 async function abrirAba(c) {
-  urlCena = new URL(c.url, location.href);
   guardar('mesa:aba', c.url);
+  if (armazem) {
+    await abrirPeca(await pecaDaOrigem(c.url, c.rotulo ?? c.nome));
+    return;
+  }
+  urlCena = new URL(c.url, location.href);
   desenharAbas();
   const resposta = await fetch(urlCena);
-  await abrir(await resposta.json(), urlCena);
+  await abrir(await resposta.json(), urlCena, { rascunhoAntigo: true });
 }
 
 function desenharAbas() {
   const nav = $('#abas');
   if (!CENAS?.length) { nav.hidden = true; return; }
   nav.hidden = false;
-  const atual = CENAS.find((c) => new URL(c.url, location.href).href === urlCena.href);
+  // a aba fica marcada só para a peça que veio com ela (uma cópia da mesma cena não marca)
+  const atual = CENAS.find((c) => (pecaAtual ? pecaAtual.ordem != null && c.url === pecaAtual.origem : new URL(c.url, location.href).href === urlCena.href));
   const grupos = [...new Set(CENAS.map(grupoDe))];
   const grupo = atual ? grupoDe(atual) : grupos[0];
   const seletor = grupos.length > 1
@@ -1547,7 +1668,8 @@ function desenharAbas() {
 
 async function iniciar() {
   const preferida = CENAS?.length ? (CENAS.find((c) => c.url === ler('mesa:aba')) ?? CENAS[0]).url : null;
-  urlCena = new URL(params.get('cena') ?? preferida ?? window.CENA_PADRAO, location.href);
+  const pedida = params.get('cena') ?? preferida ?? window.CENA_PADRAO;
+  urlCena = new URL(pedida, location.href);
   baseAssets = urlCena;
 
   canvas = new fabric.Canvas($('#tela'), { preserveObjectStacking: true, selection: false, enableRetinaScaling: true });
@@ -1626,9 +1748,46 @@ async function iniciar() {
   iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice, aoEscolher: colocarDaBiblioteca });
   carregarPredefinidas(urlIndice);
 
-  const resposta = await fetch(urlCena);
-  if (!resposta.ok) throw new Error(`não achei a cena ${urlCena.pathname} (${resposta.status})`);
-  await abrir(await resposta.json(), urlCena);
+  await ligarArmazem();
+  if (!armazem) {
+    const resposta = await fetch(urlCena);
+    if (!resposta.ok) throw new Error(`não achei a cena ${urlCena.pathname} (${resposta.status})`);
+    await abrir(await resposta.json(), urlCena, { rascunhoAntigo: true });
+    return;
+  }
+  // a peça da última visita, ou a pedida no endereço (?cena=), ou a primeira aba
+  const ultima = !params.get('cena') && ler('mesa:peca') ? await armazem.lerPeca(ler('mesa:peca')) : null;
+  await abrirPeca(ultima && !ultima.arquivado ? ultima : await pecaDaOrigem(pedida));
+}
+
+// Abre o Armazém (Mesa online: banco dela + cópia no navegador; local: só o navegador) e, na primeira
+// vez, transforma as cenas que vêm com a página em projetos e peças, trazendo rascunhos e composições antigos.
+async function ligarArmazem() {
+  const r = await abrirArmazem({
+    aoFalhar: (e, colecao) => aviso(`O banco da Mesa online recusou ${colecao === 'pecas' ? 'a peça' : colecao} (${e.code}): ficou guardada só neste navegador.`, true),
+  });
+  armazem = r.armazem;
+  onde = r.onde;
+  if (!armazem) { marcarSalvo('local'); await carregarComposicoes(); return; }
+  const cenas = CENAS?.length ? CENAS : [{ url: params.get('cena') ?? window.CENA_PADRAO }];
+  try {
+    const novos = await armazem.semear(cenas.map((c) => ({ ...c, nome: c.nome ?? c.url.split('/').slice(-2, -1)[0], origem: c.url })), {
+      nomesGrupo: NOMES_GRUPO,
+      rascunhoDe: (origem) => { try { return JSON.parse(ler(chaveRascunhoAntigo(resolver(origem).href)) ?? 'null'); } catch { return null; } },
+      composicoesAntigas: composicoesAntigas(),
+    });
+    if (novos.rascunhos || novos.composicoes) aviso(`Trouxe para o Armazém ${novos.rascunhos} rascunho(s) e ${novos.composicoes} composição(ões) deste navegador`);
+  } catch (e) {
+    aviso(`Não consegui preparar os projetos: ${e.message}`, true);
+  }
+  await carregarComposicoes();
+  projetos = iniciarProjetos({
+    armazem, onde, aviso, esc,
+    abrirPeca: async (p) => { try { await abrirPeca(p); } catch (e) { aviso(e.message, true); } },
+    pecaAtual: () => pecaAtual,
+    cenaAtual: () => cena,
+    descarregar,
+  });
 }
 
 // Acesso para depuração e para testes automáticos.
