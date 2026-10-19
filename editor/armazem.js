@@ -261,7 +261,9 @@ export function criarArmazem(adaptador, {
       const criados = { projetos: 0, pecas: 0, rascunhos: 0, composicoes: 0 };
       const projetos = new Map((await adaptador.listar('projetos')).map((p) => [p.id, p]));
       const pecas = await adaptador.listar('pecas');
+      // Uma mesma cena pode alimentar peças de projetos diferentes (cópias por grupo); o rascunho antigo vai só para a primeira.
       const origens = new Set(pecas.map((p) => p.origem).filter(Boolean));
+      const pares = new Set(pecas.filter((p) => p.origem).map((p) => `${p.projeto}|${p.origem}`));
       let ordem = 0;
       for (const c of cenas) {
         ordem++;
@@ -273,14 +275,15 @@ export function criarArmazem(adaptador, {
           projetos.set(idProjeto, p);
           criados.projetos++;
         }
-        if (origens.has(c.origem)) continue;
-        const rascunho = rascunhoDe(c.origem);
+        if (pares.has(`${idProjeto}|${c.origem}`)) continue;
+        const rascunho = origens.has(c.origem) ? null : rascunhoDe(c.origem);
         const id = await idLivre('pecas', c.nome ?? c.rotulo);
         await adaptador.gravar('pecas', id, {
           id, projeto: idProjeto, nome: c.rotulo ?? c.nome, rotulo: c.rotulo ?? c.nome, origem: c.origem, ordem,
           cena: rascunho, formato: rascunho?.formato ?? null, arquivado: false, criado: agora(), alterado: agora(),
         });
         origens.add(c.origem);
+        pares.add(`${idProjeto}|${c.origem}`);
         criados.pecas++;
         if (rascunho) criados.rascunhos++;
       }

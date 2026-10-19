@@ -37,6 +37,18 @@ test('semear cria um projeto por grupo e uma peça por cena, uma vez só', async
   assert.equal(pecas[0].cena, null);
 });
 
+test('semear dá peças próprias a projetos que usam a mesma cena', async () => {
+  const a = criarArmazem(adaptadorMemoria());
+  const mesma = [
+    { nome: 'f-a', rotulo: 'a', origem: 'x/cena.json', grupo: 'fa' },
+    { nome: 'f-b', rotulo: 'a', origem: 'x/cena.json', grupo: 'fb' },
+  ];
+  const r = await a.semear(mesma, { rascunhoDe: () => cena('rascunho') });
+  assert.deepEqual(r, { projetos: 2, pecas: 2, rascunhos: 1, composicoes: 0 });
+  assert.equal((await a.listarPecas({ projeto: 'g-fb' })).length, 1);
+  assert.deepEqual(await a.semear(mesma), { projetos: 0, pecas: 0, rascunhos: 0, composicoes: 0 });
+});
+
 test('semear traz rascunhos e composições antigas do navegador', async () => {
   const a = criarArmazem(adaptadorMemoria());
   const rascunho = cena('editada');
