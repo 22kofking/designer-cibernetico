@@ -9,7 +9,7 @@ import { caixaEmFracoes, caixaEmPixels, validarCena } from '../src/nucleo/cena.j
 import { criarMedidor, montarCena, MISTURAS } from '../src/nucleo/render.js';
 import { abrirPsd, exportarPsd } from './psd-navegador.js';
 import { salvar } from './salvar.js';
-import { iniciarBiblioteca } from './biblioteca.js';
+import { iniciarBiblioteca, TIPO_ARRASTO } from './biblioteca.js';
 import { abrirArmazem, guardarImagem, tirarImagensDaCena } from './armazem-navegador.js';
 import { iniciarProjetos } from './projetos.js';
 import { iniciarInterface } from './interface.js';
@@ -459,16 +459,19 @@ const NOVOS = {
 };
 
 // Coloca uma imagem (data URL ou endereço) como camada nova, no meio da peça e em tamanho que caiba.
-async function colocarImagem(asset, nome, origem) {
+async function colocarImagem(asset, nome, origem, centro = null) {
   const img = await carregarImagem(asset);
   const { largura: W, altura: H } = cena.formato;
   const f = Math.min(1, (W * 0.4) / img.width, (H * 0.8) / img.height);
   const w = img.width * f;
   const h = img.height * f;
+  // `centro` (em pixels da peça) vem de um item arrastado até ali; sem ele, a imagem fica no meio
+  const x = centro ? Math.min(Math.max(centro.x - w / 2, 0), W - w) : (W - w) / 2;
+  const y = centro ? Math.min(Math.max(centro.y - h / 2, 0), H - h) : (H - h) / 2;
   inserirNo({
     id: idNovo(nome.replace(/\.[^.]+$/, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase() || 'imagem'),
     tipo: 'imagem', papel: 'elemento', asset, encaixe: 'conter',
-    caixa: caixaEmFracoes({ x: (W - w) / 2, y: (H - h) / 2, w, h }, cena.formato),
+    caixa: caixaEmFracoes({ x, y, w, h }, cena.formato),
     origem: { como: origem },
   }, `Colocar ${nome}`);
 }
@@ -481,7 +484,7 @@ async function novaImagem(arquivo) {
 
 // Item da biblioteca: clique coloca como camada nova; Shift+clique troca a imagem da camada de imagem selecionada
 // (a caixa fica a mesma, o encaixe "conter" mantém a proporção do novo desenho).
-async function colocarDaBiblioteca(item, url, { trocar }) {
+async function colocarDaBiblioteca(item, url, { trocar, centro = null }) {
   const no = trocar && selecionado ? acharNo(selecionado) : null;
   try {
     if (no?.tipo === 'imagem') {
@@ -493,7 +496,7 @@ async function colocarDaBiblioteca(item, url, { trocar }) {
       await agendarRedesenho();
       return;
     }
-    await colocarImagem(url, item.nome, `biblioteca: ${item.nome} (${item.sub})`);
+    await colocarImagem(url, item.nome, `biblioteca: ${item.nome} (${item.sub})`, centro);
   } catch (e) {
     aviso(`Não consegui colocar ${item.nome}: ${e.message}`, true);
   }
@@ -1688,10 +1691,23 @@ async function iniciar() {
   $('#abrir').onchange = async (ev) => { const a = ev.target.files[0]; ev.target.value = ''; if (a) await abrirArquivo(a); };
   $('#exportar').onclick = () => exportar($('#formato').value);
   const area = $('#area');
-  area.addEventListener('dragover', (e) => { if (e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); area.classList.add('soltar'); } });
+  area.addEventListener('dragover', (e) => {
+    const tipos = e.dataTransfer?.types;
+    if (tipos?.includes('Files') || tipos?.includes(TIPO_ARRASTO)) { e.preventDefault(); area.classList.add('soltar'); }
+  });
   area.addEventListener('dragleave', () => area.classList.remove('soltar'));
   area.addEventListener('drop', async (e) => {
     area.classList.remove('soltar');
+    const arrasto = e.dataTransfer?.getData(TIPO_ARRASTO);
+    if (arrasto) {
+      e.preventDefault();
+      try {
+        const item = JSON.parse(arrasto);
+        const r = canvas.upperCanvasEl.getBoundingClientRect();
+        await colocarDaBiblioteca(item, item.url, { trocar: false, centro: { x: (e.clientX - r.left) / zoom, y: (e.clientY - r.top) / zoom } });
+      } catch (erro) { aviso(`Não consegui colocar o item: ${erro.message}`, true); }
+      return;
+    }
     const arquivo = e.dataTransfer?.files?.[0];
     if (!arquivo) return;
     e.preventDefault();
@@ -1703,10 +1719,22 @@ async function iniciar() {
   atualizarBotaoGuias();
   desenharAbas();
   const urlIndice = new URL(window.BIBLIOTECA ?? '../biblioteca/indice.json', location.href);
-  iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice, aoEscolher: colocarDaBiblioteca });
+  // Favoritos e recentes: no Armazém quando há (valem em qualquer aparelho), senão neste navegador.
+  const preferenciasBiblioteca = {
+    async ler() {
+      if (armazem) return (await armazem.lerPreferencia('biblioteca')) ?? {};
+      try { return JSON.parse(ler('mesa:biblioteca') ?? '{}'); } catch { return {}; }
+    },
+    async gravar(p) {
+      if (armazem) await armazem.gravarPreferencia('biblioteca', p);
+      else guardar('mesa:biblioteca', JSON.stringify(p));
+    },
+  };
+  const biblioteca = iniciarBiblioteca({ raiz: $('#biblioteca'), urlIndice, aoEscolher: colocarDaBiblioteca, preferencias: preferenciasBiblioteca });
   carregarPredefinidas(urlIndice);
 
   await ligarArmazem();
+  biblioteca.then((b) => b?.recarregar());
   if (!armazem) {
     const resposta = await fetch(urlCena);
     if (!resposta.ok) throw new Error(`não achei a cena ${urlCena.pathname} (${resposta.status})`);
