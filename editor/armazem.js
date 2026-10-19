@@ -227,6 +227,32 @@ export function criarArmazem(adaptador, {
     lerPreferencia: (id) => adaptador.ler('preferencias', slug(id)),
     gravarPreferencia: (id, doc) => adaptador.gravar('preferencias', slug(id), { ...doc, id: slug(id) }),
 
+    // ---------- backup: tudo num arquivo ----------
+    async exportarTudo() {
+      const colecoes = {};
+      for (const c of COLECOES) colecoes[c] = await adaptador.listar(c);
+      return { formato: 'mesa-armazem', versao: 1, criado: agora(), colecoes };
+    },
+    // Junta ao que já existe: o que falta entra, o que existe só é trocado se o do arquivo for mais novo
+    // (`alterado`); nada é apagado. Devolve a contagem por coleção.
+    async importarTudo(dados) {
+      if (dados?.formato !== 'mesa-armazem' || typeof dados.colecoes !== 'object') throw new Error('este arquivo não é um backup da Mesa');
+      const resultado = {};
+      for (const c of COLECOES) {
+        const docs = Array.isArray(dados.colecoes[c]) ? dados.colecoes[c] : [];
+        const r = { novos: 0, atualizados: 0, ignorados: 0 };
+        for (const doc of docs) {
+          if (!doc?.id) { r.ignorados++; continue; }
+          const atual = await adaptador.ler(c, doc.id);
+          if (!atual) { await adaptador.gravar(c, doc.id, doc); r.novos++; }
+          else if (doc.alterado && ms(doc.alterado) > ms(atual.alterado)) { await adaptador.gravar(c, doc.id, doc); r.atualizados++; }
+          else r.ignorados++;
+        }
+        resultado[c] = r;
+      }
+      return resultado;
+    },
+
     // ---------- primeira abertura ----------
     // As cenas que vêm prontas com a página (window.CENAS) viram projetos e peças, uma vez.
     // Rascunhos antigos (localStorage) entram como a cena editada da peça, e as composições

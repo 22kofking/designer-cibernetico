@@ -163,3 +163,28 @@ test('miniatura: gravarCena e definirMiniatura guardam sem mudar a data de ediç
   assert.equal((await a.duplicarPeca(p.id)).miniatura, 'data:image/jpeg;base64,BBB');
   assert.equal(await a.definirMiniatura('nao-existe', 'x'), null);
 });
+
+test('backup: exportar e importar em outro armazém junta sem apagar nem sobrescrever o que é mais novo', async () => {
+  const t = relogio();
+  const a = criarArmazem(adaptadorMemoria(), { agora: t });
+  const p = await a.criarProjeto('Marca A');
+  const peca = await a.criarPeca({ projeto: p.id, nome: 'banner', cena: cena('v1') });
+  await a.salvarVersao(peca.id, cena('v0'), { nome: 'primeira' });
+  await a.criarMarca('Marca A', { cores: [{ hex: '#000000' }] });
+  const dados = JSON.parse(JSON.stringify(await a.exportarTudo()));
+  assert.equal(dados.formato, 'mesa-armazem');
+
+  const b = criarArmazem(adaptadorMemoria(), { agora: t });
+  const r1 = await b.importarTudo(dados);
+  assert.equal(r1.pecas.novos, 1);
+  assert.equal(r1.versoes.novos, 1);
+  assert.equal((await b.lerPeca(peca.id)).cena.nome, 'v1');
+
+  t.avancar(60e3);
+  await b.gravarCena(peca.id, cena('mais nova'));
+  const r2 = await b.importarTudo(dados);
+  assert.equal(r2.pecas.ignorados, 1, 'a edição mais nova daqui não é trocada pelo backup');
+  assert.equal((await b.lerPeca(peca.id)).cena.nome, 'mais nova');
+  assert.equal((await b.listarMarcas()).length, 1);
+  await assert.rejects(() => b.importarTudo({ qualquer: 1 }), /não é um backup/);
+});
