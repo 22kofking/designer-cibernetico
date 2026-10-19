@@ -81,3 +81,19 @@ test('armazém: modelos viram peças novas e marcas guardam o kit', async () => 
   assert.equal((await a.listarMarcas())[0].cores.length, 2);
   assert.deepEqual((await a.listarMarcas())[0].fontes, []);
 });
+
+test('caminhoRelativo e mapearEnderecos: kits e fontes sem a versão da página', async () => {
+  const { caminhoRelativo, paraRelativo } = await import('../editor/util.js');
+  assert.equal(caminhoRelativo('https://x/p/mascotes/tatu/cena.json', 'https://x/p/arara/fontes/A.ttf'), '../../arara/fontes/A.ttf');
+  assert.equal(caminhoRelativo('https://x/p/cena.json', 'https://x/p/assets/a.png'), 'assets/a.png');
+  assert.equal(caminhoRelativo('https://x/p/a/cena.json', 'https://y/b.png'), 'https://y/b.png');
+  globalThis.location = { href: 'https://x/_f/777-aa/' };
+  assert.equal(paraRelativo('https://x/_f/123-zz/arara/img/logo.webp'), 'arara/img/logo.webp', 'versão antiga da página sai do endereço');
+  assert.equal(paraRelativo('https://x/_f/777-aa/a.png'), 'a.png');
+  assert.equal(paraRelativo('/_blob/abc'), '/_blob/abc');
+  const { mapearEnderecos } = await import('../editor/marca.js');
+  const kit = mapearEnderecos({ cores: [{ hex: '#000000' }], fontes: [{ familia: 'A', arquivo: 'https://x/_f/1-a/f.ttf' }, { familia: 'B' }], logos: [{ nome: 'l', asset: 'https://x/_f/1-a/l.png' }] }, paraRelativo);
+  assert.deepEqual(kit.fontes, [{ familia: 'A', arquivo: 'f.ttf' }, { familia: 'B' }]);
+  assert.equal(kit.logos[0].asset, 'l.png');
+  assert.equal(kit.cores.length, 1);
+});
