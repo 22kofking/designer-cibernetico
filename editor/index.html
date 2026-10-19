@@ -190,6 +190,11 @@ label.chk { display: flex; align-items: center; gap: 4px; font-size: 12.5px; }
   .bib-abas button[aria-selected="true"] { background: var(--ouro-fundo); border-color: var(--ouro); font-weight: 500; }
   .bib-filtros { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
   .bib-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: 340px; overflow: auto; padding: 2px; align-content: start; }
+  .bib-celula { position: relative; display: grid; }
+  .bib-estrela { position: absolute; top: 2px; right: 2px; padding: 0 5px; font-size: 14px; line-height: 1.3; border: 0; background: rgb(0 0 0 / 0.45); color: #fff; border-radius: 4px; opacity: 0; justify-content: center; }
+  .bib-celula:hover .bib-estrela, .bib-estrela:focus-visible, .bib-estrela[aria-pressed="true"] { opacity: 1; }
+  .bib-estrela[aria-pressed="true"] { color: #ffc83a; }
+  .bib-item[draggable="true"] { cursor: grab; }
   .bib-item { display: grid; grid-template-rows: 78px auto; gap: 3px; padding: 4px; border-radius: 6px; text-align: center; align-items: start; background: var(--mesa-2); }
   .bib-item img { width: 100%; height: 78px; object-fit: contain; border-radius: 4px; background: repeating-conic-gradient(var(--linha) 0 25%, var(--mesa) 0 50%) 0 0 / 10px 10px; }
   .bib-item span { font-size: 10.5px; line-height: 1.25; color: var(--tinta-suave); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

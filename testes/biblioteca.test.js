@@ -25,3 +25,28 @@ test('subcategorias contam os itens da categoria', () => {
   assert.deepEqual(subcategorias(itens, 'mascotes'), [
     { sub: 'Capivara (IA, tratada)', total: 1 }, { sub: 'Arara (rei e turista)', total: 1 }]);
 });
+
+test('favoritos: alternar liga e desliga, e o mais novo vem primeiro', async () => {
+  const { alternarFavorito } = await import('../editor/biblioteca.js');
+  let p = alternarFavorito({}, 'a');
+  p = alternarFavorito(p, 'b');
+  assert.deepEqual(p.favoritos, ['b', 'a']);
+  p = alternarFavorito(p, 'b');
+  assert.deepEqual(p.favoritos, ['a']);
+});
+
+test('recentes: o último usado vem primeiro, sem repetir e com limite', async () => {
+  const { registrarRecente } = await import('../editor/biblioteca.js');
+  let p = {};
+  for (const id of ['a', 'b', 'c', 'a']) p = registrarRecente(p, id, 3);
+  assert.deepEqual(p.recentes, ['a', 'c', 'b']);
+  p = registrarRecente(p, 'd', 3);
+  assert.deepEqual(p.recentes, ['d', 'a', 'c']);
+});
+
+test('itensDaVista segue a ordem das preferências e ignora ids que sumiram', async () => {
+  const { itensDaVista, VISTA_FAVORITOS, VISTA_RECENTES } = await import('../editor/biblioteca.js');
+  assert.deepEqual(itensDaVista(itens, { favoritos: ['d', 'x', 'a'] }, VISTA_FAVORITOS).map((i) => i.id), ['d', 'a']);
+  assert.deepEqual(itensDaVista(itens, { recentes: ['c'] }, VISTA_RECENTES).map((i) => i.id), ['c']);
+  assert.deepEqual(itensDaVista(itens, {}, VISTA_RECENTES), []);
+});
